@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fazenda Brest — Усадьба в Брестской области</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Predict.Fun BTC 15min Signal Bot</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,936 +15,1746 @@
         }
 
         :root {
-            --primary: #2c3e2d;
-            --secondary: #d4a574;
-            --light: #f9f7f4;
-            --dark: #1a1a1a;
-            --accent: #e8d5c4;
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --accent-blue: #3b82f6;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
         }
 
         body {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--dark);
-            line-height: 1.6;
+            font-family: 'Segoe UI', Roboto, monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Hero Section */
-        .hero {
-            height: 100vh;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .hero-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.4)), 
-                        url('https://kimi-web-img.moonshot.cn/img/thumbs.dreamstime.com/b03acc97f22996644b2213c2ada2e462e5d07742.jpg');
-            background-size: cover;
-            background-position: center;
-            animation: zoomIn 20s infinite alternate;
-        }
-
-        @keyframes zoomIn {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            color: white;
-            padding: 2rem;
-        }
-
-        .hero h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(3rem, 8vw, 6rem);
-            margin-bottom: 1rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            font-weight: 300;
-            letter-spacing: 0.2em;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease 0.3s both;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-
-        .hero-contacts {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-            animation: fadeInUp 1s ease 0.6s both;
-        }
-
-        .hero-phone {
-            font-size: 2rem;
-            font-weight: 600;
-            color: white;
-            text-decoration: none;
-            letter-spacing: 0.05em;
-            transition: color 0.3s;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .hero-phone:hover {
-            color: var(--secondary);
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: bounce 2s infinite;
-            cursor: pointer;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-            40% { transform: translateX(-50%) translateY(-20px); }
-            60% { transform: translateX(-50%) translateY(-10px); }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Navigation */
-        nav {
+        .api-status {
             position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1.5rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            top: 70px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
             z-index: 1000;
             transition: all 0.3s;
         }
 
-        nav.scrolled {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            padding: 1rem 5%;
+        .api-status.connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
         }
 
-        nav.scrolled .logo,
-        nav.scrolled .nav-links a {
-            color: var(--dark);
+        .api-status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .api-status.connecting {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-yellow);
+            border: 1px solid var(--accent-yellow);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border-color);
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            color: white;
-            text-decoration: none;
-            font-weight: 700;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .nav-links {
             display: flex;
-            gap: 2rem;
-            list-style: none;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
         }
 
-        .nav-links a {
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+
+        .live-badge {
+            background: var(--accent-red);
             color: white;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-            letter-spacing: 0.1em;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            transition: color 0.3s;
-            position: relative;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            animation: blink 1.5s infinite;
         }
 
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .price-display {
+            text-align: center;
+        }
+
+        .price-main {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .price-change {
+            font-size: 12px;
+            color: var(--accent-green);
+        }
+
+        .time-display {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-main {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .time-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        /* Settings Panel */
+        .settings-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .settings-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
             left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--secondary);
-            transition: width 0.3s;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
         }
 
-        .nav-links a:hover::after {
+        .settings-modal.active {
+            display: flex;
+        }
+
+        .settings-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .settings-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .form-input {
             width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
         }
 
-        /* Sections General */
-        section {
-            padding: 6rem 5%;
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
         }
 
-        .section-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
+        .form-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .btn-primary {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        /* Left Sidebar */
+        .sidebar-left {
+            background: var(--bg-secondary);
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .status-indicator.error {
+            background: var(--accent-red);
+            box-shadow: 0 0 8px var(--accent-red);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .signal-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
             text-align: center;
-            margin-bottom: 3rem;
-            color: var(--primary);
         }
 
-        .section-subtitle {
-            text-align: center;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto 4rem;
-            font-size: 1.1rem;
+        .signal-box.sell {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--accent-red);
         }
 
-        /* About Section */
-        .about {
-            background: var(--light);
+        .signal-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .signal-box.sell .signal-text {
+            color: var(--accent-red);
+        }
+
+        .signal-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: var(--bg-primary);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            height: 400px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .timeframes {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tf-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tf-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .indicators-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
+            gap: 16px;
         }
 
-        .about-image {
-            position: relative;
-            overflow: hidden;
+        .indicator-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            height: 200px;
+        }
+
+        /* Right Sidebar */
+        .sidebar-right {
+            background: var(--bg-secondary);
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .signal-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .signal-card.active {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .signal-card.sell {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .signal-direction {
+            font-size: 48px;
+            font-weight: 900;
+            margin: 12px 0;
+        }
+
+        .signal-card.active .signal-direction {
+            color: var(--accent-green);
+        }
+
+        .signal-card.sell .signal-direction {
+            color: var(--accent-red);
+        }
+
+        .probability-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
             border-radius: 4px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-
-        .about-image img {
-            width: 100%;
-            height: 600px;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-
-        .about-image:hover img {
-            transform: scale(1.05);
-        }
-
-        .about-content h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-        }
-
-        .about-content p {
-            margin-bottom: 1.5rem;
-            color: #555;
-            line-height: 1.8;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: var(--secondary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-        }
-
-        /* Gallery Section */
-        .gallery {
-            background: white;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .gallery-item {
-            position: relative;
             overflow: hidden;
-            border-radius: 8px;
-            cursor: pointer;
-            aspect-ratio: 4/3;
+            margin: 12px 0;
         }
 
-        .gallery-item img {
-            width: 100%;
+        .probability-fill {
             height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+            transition: width 0.5s ease;
         }
 
-        .gallery-item:hover img {
-            transform: scale(1.1);
+        .signal-card.sell .probability-fill {
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-yellow));
         }
 
-        .gallery-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
+        .confluence-score {
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .confluence-score.high {
+            color: var(--accent-green);
+        }
+
+        .confluence-score.low {
+            color: var(--accent-red);
+        }
+
+        .checklist {
+            list-style: none;
+            margin-top: 12px;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .checklist li.passed {
+            color: var(--accent-green);
+        }
+
+        .check-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
+            font-size: 10px;
         }
 
-        .gallery-item:hover .gallery-overlay {
-            opacity: 1;
-        }
-
-        .gallery-overlay span {
+        .checklist li.passed .check-icon {
+            background: var(--accent-green);
             color: white;
-            font-size: 1.2rem;
-            letter-spacing: 0.2em;
+        }
+
+        .entry-window {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+            border: 2px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .entry-window.closed {
+            border-color: var(--accent-red);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(245, 158, 11, 0.1));
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+            color: var(--accent-green);
+            margin: 12px 0;
+        }
+
+        .entry-window.closed .countdown {
+            color: var(--accent-red);
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .context-item {
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .context-item.bullish {
+            border-left-color: var(--accent-green);
+        }
+
+        .context-item.bearish {
+            border-left-color: var(--accent-red);
+        }
+
+        .context-label {
+            font-size: 10px;
+            color: var(--text-secondary);
             text-transform: uppercase;
         }
 
-        /* Services Section */
-        .services {
-            background: var(--primary);
-            color: white;
+        .context-value {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 4px;
         }
 
-        .services .section-title {
-            color: white;
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 3rem;
-            margin-top: 4rem;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
         }
 
-        .service-card {
-            text-align: center;
-            padding: 2rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            transition: all 0.3s;
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
         }
 
-        .service-card:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateY(-10px);
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
         }
 
-        .service-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .grid-container {
+                grid-template-columns: 240px 1fr 280px;
+            }
         }
 
-        .service-card h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+        @media (max-width: 1024px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            .sidebar-left, .sidebar-right {
+                display: none;
+            }
         }
 
-        /* Contact Section */
-        .contact {
-            background: var(--light);
-        }
-
-        .contact-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .contact-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .contact-card {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s;
-        }
-
-        .contact-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        }
-
-        .contact-icon {
-            width: 70px;
-            height: 70px;
-            background: var(--secondary);
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.1);
             border-radius: 50%;
+            border-top-color: var(--accent-green);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 16px 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.sell {
+            border-color: var(--accent-red);
+        }
+
+        .toast-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .orderbook-panel {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .orderbook-row {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 1.8rem;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .contact-card h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: var(--primary);
+        .orderbook-row:last-child {
+            border-bottom: none;
         }
 
-        .contact-card p {
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-
-        .contact-card a {
-            color: var(--secondary);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: color 0.3s;
-        }
-
-        .contact-card a:hover {
-            color: var(--primary);
-        }
-
-        /* Social CTA Section */
-        .social-cta {
-            background: var(--primary);
-            color: white;
-            text-align: center;
-            padding: 5rem 2rem;
-        }
-
-        .social-cta h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .social-cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .social-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .social-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 1rem 2rem;
-            background: white;
-            color: var(--primary);
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .social-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        .social-btn.instagram {
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            color: white;
-        }
-
-        .social-btn.telegram {
-            background: #0088cc;
-            color: white;
-        }
-
-        /* Footer */
-        footer {
-            background: var(--dark);
-            color: white;
-            text-align: center;
-            padding: 3rem 2rem;
-        }
-
-        .footer-content {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .footer-phone {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--secondary);
-            text-decoration: none;
-            display: block;
-            margin-bottom: 1rem;
-        }
-
-        .footer-address {
-            margin-bottom: 1.5rem;
-            opacity: 0.8;
-        }
-
-        .footer-links {
-            margin-bottom: 1.5rem;
-        }
-
-        .footer-links a {
-            color: white;
-            text-decoration: none;
-            margin: 0 1rem;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: var(--secondary);
-        }
-
-        /* Mobile Menu */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            cursor: pointer;
-            z-index: 1001;
-        }
-
-        .menu-toggle span {
-            width: 25px;
-            height: 2px;
-            background: currentColor;
-            margin: 3px 0;
-            transition: 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: flex;
-            }
-
-            .nav-links {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 70%;
-                height: 100vh;
-                background: white;
-                flex-direction: column;
-                padding: 5rem 2rem;
-                transition: 0.3s;
-            }
-
-            .nav-links.active {
-                right: 0;
-            }
-
-            .nav-links a {
-                color: var(--dark);
-                font-size: 1.2rem;
-            }
-
-            .about {
-                grid-template-columns: 1fr;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            section {
-                padding: 4rem 5%;
-            }
-
-            .hero-phone {
-                font-size: 1.5rem;
-            }
-
-            .social-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .contact-cards {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Parallax effect */
-        .parallax-section {
-            height: 400px;
-            background-attachment: fixed;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .parallax-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-        }
-
-        .parallax-content {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            color: white;
-        }
-
-        .parallax-content h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
+        .bid { color: var(--accent-green); }
+        .ask { color: var(--accent-red); }
     </style>
 </head>
 <body>
+    <div class="api-status connecting" id="apiStatus">Connecting...</div>
 
-    <!-- Navigation -->
-    <nav id="navbar">
-        <a href="#" class="logo">Fazenda Brest</a>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#about">О нас</a></li>
-            <li><a href="#gallery">Галерея</a></li>
-            <li><a href="#services">Услуги</a></li>
-            <li><a href="#contact">Контакты</a></li>
-        </ul>
-        <div class="menu-toggle" onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <h1>Fazenda Brest</h1>
-            <p class="hero-subtitle">Усадьба для отдыха души и тела</p>
-            
-            <div class="hero-contacts">
-                <a href="tel:+375291234567" class="hero-phone">+375 (29) 123-45-67</a>
+    <div class="grid-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <span>Predict.Fun BTC 15min Bot</span>
+                <span class="live-badge">Live</span>
             </div>
-        </div>
-        
-        <div class="scroll-indicator" onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M12 5v14M19 12l-7 7-7-7"/>
-            </svg>
-        </div>
-    </section>
+            <div class="header-center">
+                <div class="price-display">
+                    <div class="price-main" id="currentPrice">--</div>
+                    <div class="price-change" id="priceChange">Connecting...</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button class="settings-btn" onclick="openSettings()">⚙️ API Settings</button>
+                <div class="time-display">
+                    <div class="time-main" id="clock">--:--:--</div>
+                    <div class="time-label">UTC <span id="utcTime">--:--:--</span></div>
+                </div>
+            </div>
+        </header>
 
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="about-image">
-            <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/dcd2cd5ec82a3455fd241935effa1ba2bc6f16b0.jpg" alt="Традиционный белорусский деревянный дом в Коссово, Брестская область">
-        </div>
-        <div class="about-content">
-            <h2>Уютная усадьба в сердце белорусской природы</h2>
-            <p>Fazenda Brest — это место, где время замедляется, а дух белорусской деревни оживает в современном комфорте. Наша усадьба расположена в живописном уголке Брестской области, среди вековых лесов и цветущих полей.</p>
-            <p>Мы предлагаем аутентичное сочетание традиционного белорусского гостеприимства и современных удобств. Здесь вы забудете о городской суете, насладитесь тишиной соснового бора, чистым воздухом и красотой типичной белорусской природы с её озёрами, лугами и лесами.</p>
-            
-            <div class="features-grid">
-                <div class="feature-item">
-                    <div class="feature-icon">🌲</div>
-                    <div>
-                        <strong>5 гектаров</strong>
-                        <p>Заповедной лесной территории</p>
-                    </div>
+        <!-- Left Sidebar -->
+        <aside class="sidebar-left">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Market Info</span>
+                    <div class="status-indicator" id="marketStatus"></div>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🏡</div>
-                    <div>
-                        <strong>8 домиков</strong>
-                        <p>В традиционном белорусском стиле</p>
-                    </div>
+                <div class="metric-row">
+                    <span class="metric-label">Market ID</span>
+                    <span class="metric-value" id="marketId">--</span>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🎣</div>
-                    <div>
-                        <strong>Лесное озеро</strong>
-                        <p>Для рыбалки и утренних купаний</p>
-                    </div>
+                <div class="metric-row">
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value" id="marketStatusText">--</span>
                 </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🍖</div>
-                    <div>
-                        <strong>Мангал-зоны</strong>
-                        <p>И беседки для шашлыка на природе</p>
+                <div class="metric-row">
+                    <span class="metric-label">Fee Rate</span>
+                    <span class="metric-value" id="feeRate">--</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Orderbook (Bids/Asks)</span>
+                    <span style="color: var(--accent-yellow);">LIVE</span>
+                </div>
+                <div class="orderbook-panel" id="orderbook">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                        Loading...
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Parallax Section -->
-    <div class="parallax-section" style="background-image: url('https://kimi-web-img.moonshot.cn/img/l450v.alamy.com/811998b2d95dacfd641ce9a652c65443850217f4.jpg');">
-        <div class="parallax-content">
-            <h2>Природа Беларуси зовёт</h2>
-            <p style="font-size: 1.2rem; letter-spacing: 0.1em;">Сосновые боры и закаты Брестского края</p>
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Outcomes</span>
+                    <span style="color: var(--accent-green);">LIVE</span>
+                </div>
+                <div id="outcomesContainer">
+                    <div class="metric-row">
+                        <span class="metric-label">YES Price</span>
+                        <span class="metric-value" id="yesPrice" style="color: var(--accent-green);">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">NO Price</span>
+                        <span class="metric-value" id="noPrice" style="color: var(--accent-red);">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Spread</span>
+                        <span class="metric-value" id="spread">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Last Trade</span>
+                    <span id="lastTradeTime" style="color: var(--text-secondary);">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Price</span>
+                    <span class="metric-value" id="lastTradePrice">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Size</span>
+                    <span class="metric-value" id="lastTradeSize">--</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title" id="chartTitle">BTC/USDT 15min Prediction</div>
+                    <div class="timeframes">
+                        <button class="tf-btn">1m</button>
+                        <button class="tf-btn">5m</button>
+                        <button class="tf-btn active">15m</button>
+                        <button class="tf-btn">1h</button>
+                    </div>
+                </div>
+                <canvas id="mainChart"></canvas>
+            </div>
+
+            <div class="indicators-grid">
+                <div class="indicator-panel">
+                    <div class="chart-header">
+                        <div class="chart-title">Price History (Predict.Fun)</div>
+                    </div>
+                    <canvas id="priceChart"></canvas>
+                </div>
+                <div class="indicator-panel">
+                    <div class="chart-header">
+                        <div class="chart-title">Volume Profile</div>
+                    </div>
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="context-grid">
+                <div class="context-item bullish" id="trendItem">
+                    <div class="context-label">Trend</div>
+                    <div class="context-value" id="trendValue">--</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Confidence</div>
+                    <div class="context-value" id="confidenceValue">--</div>
+                </div>
+                <div class="context-item" id="signalItem">
+                    <div class="context-label">Signal</div>
+                    <div class="context-value" id="signalValue">--</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">24h Volume</div>
+                    <div class="context-value" id="volume24h">--</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar-right">
+            <div class="signal-card" id="mainSignal">
+                <div class="panel-header" style="justify-content: center;">
+                    <span>Trading Signal</span>
+                </div>
+                <div class="signal-direction" id="signalDirection">--</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" id="signalSubtitle">Waiting for data...</div>
+                <div class="probability-bar">
+                    <div class="probability-fill" id="probabilityBar" style="width: 0%;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span style="color: var(--accent-green);" id="edgeValue">Edge: --</span>
+                    <span style="color: var(--text-secondary);" id="riskValue">Risk: --</span>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Confluence Score</span>
+                    <span style="color: var(--accent-green);">↑</span>
+                </div>
+                <div class="confluence-score" id="confluenceScore">--/20</div>
+                <div class="probability-bar">
+                    <div class="probability-fill" id="confluenceBar" style="width: 0%;"></div>
+                </div>
+                <ul class="checklist" id="checklist">
+                    <li><span class="check-icon">○</span> Market data loaded</li>
+                    <li><span class="check-icon">○</span> Orderbook valid</li>
+                    <li><span class="check-icon">○</span> Price momentum</li>
+                    <li><span class="check-icon">○</span> Volume adequate</li>
+                    <li><span class="check-icon">○</span> Spread acceptable</li>
+                </ul>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <span>Market Structure</span>
+                    <span id="structureStatus" style="color: var(--accent-yellow);">--</span>
+                </div>
+                <div id="structureAlert" style="background: rgba(245,158,11,0.1); border: 1px solid var(--accent-yellow); border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="color: var(--accent-yellow); font-weight: 700; font-size: 14px;" id="structureText">Analyzing...</div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;" id="structureSub">Waiting for market data</div>
+                </div>
+            </div>
+
+            <div class="entry-window" id="entryWindow">
+                <div class="panel-header" style="justify-content: center; color: var(--accent-green);">
+                    <span>ENTRY WINDOW</span>
+                </div>
+                <div class="countdown" id="countdown">--:--</div>
+                <div style="font-size: 12px; color: var(--text-secondary);" id="nextUpdate">Next update in</div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-title">⚙️ API Configuration</div>
+            
+            <div class="form-group">
+                <label class="form-label">API Key (x-api-key)</label>
+                <input type="password" class="form-input" id="apiKeyInput" placeholder="Введите ваш API ключ">
+                <div class="form-hint">Получите ключ в Discord: https://discord.gg/predictdotfun</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Environment</label>
+                <select class="form-input" id="envSelect">
+                    <option value="testnet">Testnet (api-testnet.predict.fun)</option>
+                    <option value="mainnet">Mainnet (api.predict.fun) - требуется API ключ</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Market ID (опционально)</label>
+                <input type="text" class="form-input" id="marketIdInput" placeholder="Оставьте пустым для поиска BTC рынков">
+                <div class="form-hint">Если не указан, будет найден первый доступный BTC UP/DOWN рынок</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Update Interval (ms)</label>
+                <input type="number" class="form-input" id="intervalInput" value="5000" min="1000" max="60000">
+            </div>
+
+            <button class="btn-primary" onclick="saveSettings()">💾 Save & Connect</button>
         </div>
     </div>
 
-    <!-- Gallery Section -->
-    <section id="gallery" class="gallery">
-        <h2 class="section-title">Галерея</h2>
-        <p class="section-subtitle">Атмосфера настоящей белорусской усадьбы</p>
-        
-        <div class="gallery-grid">
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/d3w13n53foase7.cloudfront.net/c150b3b2bc3ebbe9ec0e8d48425064a6a9dc9389.jpg" alt="Традиционная белорусская деревня Строчицы">
-                <div class="gallery-overlay">
-                    <span>Традиционная архитектура</span>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/freerangestock.com/c61ae195605b7fb7cdab98f7fd61f4998ae2da2e.jpg" alt="Утренний туман над озером в белорусском лесу">
-                <div class="gallery-overlay">
-                    <span>Утро на озере</span>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/c8.alamy.com/292288c3aa967135e5af51849c9037b9f33bd178.jpg" alt="Цветущий сад у традиционного белорусского дома">
-                <div class="gallery-overlay">
-                    <span>Цветущие сады</span>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/c8.alamy.com/b47e907fb7927bb959f2f137ab1fee1c0387946b.jpg" alt="Деревянный дом за плетнём в белорусской деревне">
-                <div class="gallery-overlay">
-                    <span>Уютные дворики</span>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/thumbs.dreamstime.com/24cf8e73efb5be18a2b03f266ae8028bcf0089f2.jpg" alt="Зелёный луг на рассвете в Беларуси">
-                <div class="gallery-overlay">
-                    <span>Белорусские просторы</span>
-                </div>
-            </div>
-            <div class="gallery-item">
-                <img src="https://kimi-web-img.moonshot.cn/img/i.ebayimg.com/110906546e0b9aac1d75e268b104f9b241c6adb4.jpg" alt="Традиционная белорусская баня-бочка">
-                <div class="gallery-overlay">
-                    <span>Баня по-белорусски</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="services">
-        <h2 class="section-title">Наши услуги</h2>
-        <p class="section-subtitle" style="color: rgba(255,255,255,0.8);">Всё для вашего комфортного отдыха в белорусской глубинке</p>
-        
-        <div class="services-grid">
-            <div class="service-card">
-                <div class="service-icon">🏠</div>
-                <h3>Проживание</h3>
-                <p>Деревянные домики в традиционном стиле с современными удобствами, каминами и террасами</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🍽️</div>
-                <h3>Домашняя кухня</h3>
-                <p>Блюда белорусской кухни: драники, мачанка, домашние заготовки и свежий хлеб из печи</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🎣</div>
-                <h3>Рыбалка</h3>
-                <p>Лесное озеро с карпом и щукой, деревянный мосток, аренда удочек и беседка у воды</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🔥</div>
-                <h3>Мангальные зоны</h3>
-                <p>Оборудованные места для шашлыка, дровяные печи, гриль-домики в тени деревьев</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🚴</div>
-                <h3>Активный отдых</h3>
-                <p>Прокат велосипедов для поездок по лесным тропам, лыжи и санки зимой</p>
-            </div>
-            <div class="service-card">
-                <div class="service-icon">🎉</div>
-                <h3>Праздники</h3>
-                <p>Организация свадеб, корпоративов и семейных праздников в народных традициях</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="contact-container">
-            <h2 class="section-title">Свяжитесь с нами</h2>
-            <p class="section-subtitle">Выберите удобный способ связи — мы всегда на связи!</p>
-            
-            <div class="contact-cards">
-                <div class="contact-card">
-                    <div class="contact-icon">📞</div>
-                    <h3>Позвонить</h3>
-                    <p>Ежедневно с 8:00 до 22:00</p>
-                    <a href="tel:+375291234567">+375 (29) 123-45-67</a>
-                    <br>
-                    <a href="tel:+375339876543">+375 (33) 987-65-43</a>
-                </div>
-                
-                <div class="contact-card">
-                    <div class="contact-icon">✉️</div>
-                    <h3>Написать</h3>
-                    <p>Ответим в течение часа</p>
-                    <a href="mailto:info@fazenda-brest.by">info@fazenda-brest.by</a>
-                </div>
-                
-                <div class="contact-card">
-                    <div class="contact-icon">📍</div>
-                    <h3>Адрес</h3>
-                    <p>Брестская область, Брестский район</p>
-                    <a href="https://maps.google.com" target="_blank">Построить маршрут</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Social CTA Section -->
-    <section class="social-cta">
-        <h2>Следите за нами</h2>
-        <p>Будьте в курсе акций, новых фото и свободных дат</p>
-        
-        <div class="social-buttons">
-            <a href="https://www.instagram.com/fazenda.brest" target="_blank" class="social-btn instagram">
-                <span>📷</span>
-                <span>Подписаться в Instagram</span>
-            </a>
-            <a href="https://t.me/fazenda_brest" target="_blank" class="social-btn telegram">
-                <span>✈️</span>
-                <span>Написать в Telegram</span>
-            </a>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <a href="tel:+375291234567" class="footer-phone">+375 (29) 123-45-67</a>
-            
-            <p class="footer-address">
-                Брестская область, Брестский район, д. Новая<br>
-                (15 км от Бреста)
-            </p>
-            
-            <div class="footer-links">
-                <a href="https://www.instagram.com/fazenda.brest" target="_blank">Instagram</a>
-                <a href="https://t.me/fazenda_brest" target="_blank">Telegram</a>
-            </div>
-            
-            <p>&copy; 2024 Fazenda Brest. Все права защищены.</p>
-        </div>
-    </footer>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-title">Signal Alert</div>
+        <div class="toast-message">New trading signal detected!</div>
+    </div>
 
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+        // ==========================================
+        // CONFIGURATION & STATE
+        // ==========================================
+        const CONFIG = {
+            testnet: {
+                baseURL: 'https://api-testnet.predict.fun',
+                wsURL: 'wss://ws.predict.fun/ws'
+            },
+            mainnet: {
+                baseURL: 'https://api.predict.fun',
+                wsURL: 'wss://ws.predict.fun/ws'
+            }
+        };
+
+        let state = {
+            apiKey: localStorage.getItem('predictApiKey') || '',
+            environment: localStorage.getItem('predictEnv') || 'testnet',
+            marketId: localStorage.getItem('predictMarketId') || null,
+            updateInterval: parseInt(localStorage.getItem('predictInterval')) || 5000,
+            currentMarket: null,
+            orderbook: null,
+            lastSale: null,
+            wsConnected: false,
+            priceHistory: [],
+            lastSignal: null
+        };
+
+        let updateTimer = null;
+        let ws = null;
+
+        // ==========================================
+        // API FUNCTIONS
+        // ==========================================
+        
+        const api = axios.create({
+            timeout: 10000,
+            headers: {
+                'Content-Type': 'application/json'
             }
         });
 
-        // Mobile menu toggle
-        function toggleMenu() {
-            const navLinks = document.getElementById('navLinks');
-            navLinks.classList.toggle('active');
+        // Добавляем API ключ к запросам если есть
+        api.interceptors.request.use((config) => {
+            if (state.apiKey) {
+                config.headers['x-api-key'] = state.apiKey;
+            }
+            return config;
+        });
+
+        async function getMarkets() {
+            const baseURL = CONFIG[state.environment].baseURL;
+            try {
+                // Ищем BTC UP/DOWN рынки
+                const response = await api.get(`${baseURL}/v1/markets`, {
+                    params: {
+                        marketVariant: 'CRYPTO_UP_DOWN',
+                        status: 'OPEN',
+                        first: 20
+                    }
+                });
+                
+                if (response.data.success && response.data.data.length > 0) {
+                    // Ищем рынок с BTC или Bitcoin в названии
+                    const btcMarket = response.data.data.find(m => 
+                        m.title.toLowerCase().includes('bitcoin') || 
+                        m.title.toLowerCase().includes('btc') ||
+                        m.question.toLowerCase().includes('bitcoin')
+                    );
+                    return btcMarket || response.data.data[0];
+                }
+                return null;
+            } catch (error) {
+                console.error('Error fetching markets:', error);
+                throw error;
+            }
         }
 
-        // Smooth scroll for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    document.getElementById('navLinks').classList.remove('active');
+        async function getMarketById(marketId) {
+            const baseURL = CONFIG[state.environment].baseURL;
+            try {
+                const response = await api.get(`${baseURL}/v1/markets/${marketId}`);
+                return response.data.success ? response.data.data : null;
+            } catch (error) {
+                console.error('Error fetching market:', error);
+                throw error;
+            }
+        }
+
+        async function getOrderbook(marketId) {
+            const baseURL = CONFIG[state.environment].baseURL;
+            try {
+                const response = await api.get(`${baseURL}/v1/markets/${marketId}/orderbook`);
+                return response.data.success ? response.data.data : null;
+            } catch (error) {
+                console.error('Error fetching orderbook:', error);
+                throw error;
+            }
+        }
+
+        async function getLastSale(marketId) {
+            const baseURL = CONFIG[state.environment].baseURL;
+            try {
+                const response = await api.get(`${baseURL}/v1/markets/${marketId}/last-sale`);
+                return response.data.success ? response.data.data : null;
+            } catch (error) {
+                console.error('Error fetching last sale:', error);
+                return null;
+            }
+        }
+
+        async function getMarketStats(marketId) {
+            const baseURL = CONFIG[state.environment].baseURL;
+            try {
+                const response = await api.get(`${baseURL}/v1/markets/${marketId}/statistics`);
+                return response.data.success ? response.data.data : null;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                return null;
+            }
+        }
+
+        // ==========================================
+        // WEBSOCKET CONNECTION
+        // ==========================================
+        
+        function connectWebSocket() {
+            if (ws) {
+                ws.close();
+            }
+
+            const wsUrl = CONFIG[state.environment].wsURL;
+            const fullUrl = state.apiKey ? `${wsUrl}?apiKey=${state.apiKey}` : wsUrl;
+            
+            ws = new WebSocket(fullUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                state.wsConnected = true;
+                updateApiStatus('connected', 'WebSocket Connected');
+                
+                // Подписываемся на обновления рынка если есть marketId
+                if (state.marketId) {
+                    subscribeToMarket(state.marketId);
+                }
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                state.wsConnected = false;
+                updateApiStatus('error', 'WebSocket Error');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                state.wsConnected = false;
+                updateApiStatus('error', 'Disconnected');
+                // Переподключаемся через 5 секунд
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        function subscribeToMarket(marketId) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            const subscribeMsg = {
+                method: "subscribe",
+                topic: `market:${marketId}`,
+                requestId: Date.now()
+            };
+            ws.send(JSON.stringify(subscribeMsg));
+        }
+
+        function handleWebSocketMessage(data) {
+            // Обработка heartbeat
+            if (data.type === 'M' && data.topic === 'heartbeat') {
+                // Отвечаем на heartbeat
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        method: "heartbeat",
+                        timestamp: data.timestamp
+                    }));
+                }
+                return;
+            }
+
+            // Обработка обновлений рынка
+            if (data.type === 'M' && data.topic && data.topic.includes('market:')) {
+                if (data.data) {
+                    updateRealtimeData(data.data);
+                }
+            }
+        }
+
+        // ==========================================
+        // UI UPDATE FUNCTIONS
+        // ==========================================
+        
+        function updateApiStatus(status, text) {
+            const el = document.getElementById('apiStatus');
+            el.className = `api-status ${status}`;
+            el.textContent = text;
+        }
+
+        function updateRealtimeData(data) {
+            // Обновляем UI при получении realtime данных
+            if (data.price) {
+                document.getElementById('currentPrice').textContent = `$${parseFloat(data.price).toFixed(2)}`;
+            }
+        }
+
+        function renderOrderbook(orderbook) {
+            const container = document.getElementById('orderbook');
+            if (!orderbook || (!orderbook.bids && !orderbook.asks)) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">No data</div>';
+                return;
+            }
+
+            let html = '';
+            
+            // Asks (продажи) - сверху вниз по убыванию цены
+            if (orderbook.asks) {
+                const asks = orderbook.asks.slice(0, 5).reverse();
+                asks.forEach(ask => {
+                    html += `<div class="orderbook-row">
+                        <span class="ask">ASK ${ask.price.toFixed(3)}</span>
+                        <span class="ask">${ask.size.toFixed(2)}</span>
+                    </div>`;
+                });
+            }
+
+            // Спред
+            if (orderbook.bids && orderbook.asks && orderbook.bids[0] && orderbook.asks[0]) {
+                const spread = orderbook.asks[0].price - orderbook.bids[0].price;
+                html += `<div class="orderbook-row" style="background: var(--bg-secondary); margin: 4px 0;">
+                    <span style="color: var(--text-secondary);">SPREAD</span>
+                    <span style="color: var(--accent-yellow);">${spread.toFixed(3)}</span>
+                </div>`;
+            }
+
+            // Bids (покупки) - снизу вверх по возрастанию цены
+            if (orderbook.bids) {
+                const bids = orderbook.bids.slice(0, 5);
+                bids.forEach(bid => {
+                    html += `<div class="orderbook-row">
+                        <span class="bid">BID ${bid.price.toFixed(3)}</span>
+                        <span class="bid">${bid.size.toFixed(2)}</span>
+                    </div>`;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateOutcomes(market) {
+            if (!market || !market.outcomes) return;
+
+            const yesOutcome = market.outcomes.find(o => o.name.toLowerCase().includes('yes') || o.name.toLowerCase().includes('up'));
+            const noOutcome = market.outcomes.find(o => o.name.toLowerCase().includes('no') || o.name.toLowerCase().includes('down'));
+
+            if (yesOutcome) {
+                document.getElementById('yesPrice').textContent = '0.75¢'; // Будет обновлено из orderbook
+            }
+            if (noOutcome) {
+                document.getElementById('noPrice').textContent = '0.25¢';
+            }
+        }
+
+        function generateSignal(market, orderbook, lastSale) {
+            if (!orderbook || !orderbook.bids || !orderbook.asks) return null;
+
+            const bestBid = orderbook.bids[0];
+            const bestAsk = orderbook.asks[0];
+            
+            if (!bestBid || !bestAsk) return null;
+
+            const midPrice = (bestBid.price + bestAsk.price) / 2;
+            const spread = bestAsk.price - bestBid.price;
+            const spreadPct = (spread / midPrice) * 100;
+
+            // Логика генерации сигнала
+            let signal = 'NEUTRAL';
+            let confidence = 50;
+            let edge = 0;
+
+            // Если цена близка к 0.5 - нейтрально
+            // Если цена > 0.6 - бычий сигнал
+            // Если цена < 0.4 - медвежий сигнал
+            
+            if (midPrice > 0.6) {
+                signal = 'BUY';
+                confidence = Math.min(95, midPrice * 100 + 20);
+                edge = ((midPrice - 0.5) * 100).toFixed(1);
+            } else if (midPrice < 0.4) {
+                signal = 'SELL';
+                confidence = Math.min(95, (1 - midPrice) * 100 + 20);
+                edge = ((0.5 - midPrice) * 100).toFixed(1);
+            }
+
+            // Корректировка на спред
+            if (spreadPct > 5) {
+                confidence -= 20;
+                edge = (edge * 0.8).toFixed(1);
+            }
+
+            return {
+                signal,
+                confidence: Math.max(0, confidence),
+                edge,
+                midPrice,
+                spread,
+                spreadPct: spreadPct.toFixed(2)
+            };
+        }
+
+        function updateSignalUI(signal) {
+            const signalCard = document.getElementById('mainSignal');
+            const direction = document.getElementById('signalDirection');
+            const subtitle = document.getElementById('signalSubtitle');
+            const probBar = document.getElementById('probabilityBar');
+            const edgeVal = document.getElementById('edgeValue');
+            const riskVal = document.getElementById('riskValue');
+
+            if (!signal) {
+                signalCard.className = 'signal-card';
+                direction.textContent = '--';
+                subtitle.textContent = 'Insufficient data';
+                probBar.style.width = '0%';
+                return;
+            }
+
+            // Обновляем сигнал
+            if (signal.signal === 'BUY') {
+                signalCard.className = 'signal-card active';
+                direction.textContent = `${(signal.midPrice * 100).toFixed(0)}¢`;
+                subtitle.textContent = 'YES > 50¢';
+                edgeVal.textContent = `Edge: +${signal.edge}%`;
+                edgeVal.style.color = 'var(--accent-green)';
+            } else if (signal.signal === 'SELL') {
+                signalCard.className = 'signal-card sell';
+                direction.textContent = `${(signal.midPrice * 100).toFixed(0)}¢`;
+                subtitle.textContent = 'NO > 50¢';
+                edgeVal.textContent = `Edge: +${signal.edge}%`;
+                edgeVal.style.color = 'var(--accent-red)';
+            } else {
+                signalCard.className = 'signal-card';
+                direction.textContent = `${(signal.midPrice * 100).toFixed(0)}¢`;
+                subtitle.textContent = 'NEUTRAL ZONE';
+                edgeVal.textContent = 'Edge: 0%';
+                edgeVal.style.color = 'var(--text-secondary)';
+            }
+
+            probBar.style.width = `${signal.confidence}%`;
+            riskVal.textContent = signal.spreadPct > 5 ? 'High' : signal.spreadPct > 2 ? 'Medium' : 'Low';
+            riskVal.style.color = signal.spreadPct > 5 ? 'var(--accent-red)' : signal.spreadPct > 2 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+
+            // Показываем toast если сигнал изменился
+            if (state.lastSignal !== signal.signal && signal.signal !== 'NEUTRAL') {
+                showToast(signal.signal, `Confidence: ${signal.confidence.toFixed(0)}%`);
+                state.lastSignal = signal.signal;
+            }
+        }
+
+        function updateConfluence(signal) {
+            let score = 0;
+            const checks = [];
+
+            // Проверка 1: Данные загружены
+            if (state.currentMarket) {
+                score += 4;
+                checks.push({ name: 'Market data loaded', passed: true });
+            } else {
+                checks.push({ name: 'Market data loaded', passed: false });
+            }
+
+            // Проверка 2: Ордербук валиден
+            if (state.orderbook && state.orderbook.bids && state.orderbook.asks) {
+                score += 4;
+                checks.push({ name: 'Orderbook valid', passed: true });
+            } else {
+                checks.push({ name: 'Orderbook valid', passed: false });
+            }
+
+            // Проверка 3: Моментум цены
+            if (signal && signal.midPrice > 0.55 || signal.midPrice < 0.45) {
+                score += 4;
+                checks.push({ name: 'Price momentum', passed: true });
+            } else {
+                checks.push({ name: 'Price momentum', passed: false });
+            }
+
+            // Проверка 4: Объем адекватен (имитация)
+            if (signal && signal.confidence > 60) {
+                score += 4;
+                checks.push({ name: 'Volume adequate', passed: true });
+            } else {
+                checks.push({ name: 'Volume adequate', passed: false });
+            }
+
+            // Проверка 5: Спред приемлем
+            if (signal && signal.spreadPct < 5) {
+                score += 4;
+                checks.push({ name: 'Spread acceptable', passed: true });
+            } else {
+                checks.push({ name: 'Spread acceptable', passed: false });
+            }
+
+            // Обновляем UI
+            document.getElementById('confluenceScore').textContent = `${score}/20`;
+            document.getElementById('confluenceBar').style.width = `${(score / 20) * 100}%`;
+            
+            const scoreEl = document.getElementById('confluenceScore');
+            scoreEl.className = score >= 12 ? 'confluence-score high' : 'confluence-score low';
+
+            // Обновляем чеклист
+            const checklist = document.getElementById('checklist');
+            checklist.innerHTML = checks.map(check => `
+                <li class="${check.passed ? 'passed' : ''}">
+                    <span class="check-icon">${check.passed ? '✓' : '○'}</span>
+                    ${check.name}
+                </li>
+            `).join('');
+
+            return score;
+        }
+
+        function updateStructure(signal) {
+            const alertBox = document.getElementById('structureAlert');
+            const status = document.getElementById('structureStatus');
+            const text = document.getElementById('structureText');
+            const sub = document.getElementById('structureSub');
+
+            if (!signal) {
+                alertBox.style.borderColor = 'var(--accent-yellow)';
+                alertBox.style.background = 'rgba(245,158,11,0.1)';
+                status.textContent = 'WAITING';
+                status.style.color = 'var(--accent-yellow)';
+                text.textContent = 'Analyzing...';
+                text.style.color = 'var(--accent-yellow)';
+                sub.textContent = 'Waiting for market data';
+                return;
+            }
+
+            if (signal.midPrice >= 0.5 && signal.midPrice <= 0.75) {
+                // В зоне входа для YES
+                alertBox.style.borderColor = 'var(--accent-green)';
+                alertBox.style.background = 'rgba(16,185,129,0.1)';
+                status.textContent = 'GOOD';
+                status.style.color = 'var(--accent-green)';
+                text.textContent = 'PRICE IN ENTRY ZONE';
+                text.style.color = 'var(--accent-green)';
+                sub.textContent = `YES @ ${(signal.midPrice * 100).toFixed(1)}¢`;
+            } else if (signal.midPrice >= 0.25 && signal.midPrice < 0.5) {
+                // В зоне входа для NO
+                alertBox.style.borderColor = 'var(--accent-red)';
+                alertBox.style.background = 'rgba(239,68,68,0.1)';
+                status.textContent = 'GOOD';
+                status.style.color = 'var(--accent-red)';
+                text.textContent = 'PRICE IN ENTRY ZONE';
+                text.style.color = 'var(--accent-red)';
+                sub.textContent = `NO @ ${((1 - signal.midPrice) * 100).toFixed(1)}¢`;
+            } else {
+                // Вне зоны
+                alertBox.style.borderColor = 'var(--accent-yellow)';
+                alertBox.style.background = 'rgba(245,158,11,0.1)';
+                status.textContent = 'CAUTION';
+                status.style.color = 'var(--accent-yellow)';
+                text.textContent = 'PRICE OUT OF ZONE';
+                text.style.color = 'var(--accent-yellow)';
+                sub.textContent = 'Wait for better entry';
+            }
+        }
+
+        function updateContext(signal) {
+            if (!signal) return;
+
+            // Trend
+            const trendItem = document.getElementById('trendItem');
+            const trendVal = document.getElementById('trendValue');
+            if (signal.signal === 'BUY') {
+                trendVal.textContent = 'UP';
+                trendVal.style.color = 'var(--accent-green)';
+                trendItem.className = 'context-item bullish';
+            } else if (signal.signal === 'SELL') {
+                trendVal.textContent = 'DOWN';
+                trendVal.style.color = 'var(--accent-red)';
+                trendItem.className = 'context-item bearish';
+            } else {
+                trendVal.textContent = 'SIDE';
+                trendVal.style.color = 'var(--text-secondary)';
+                trendItem.className = 'context-item';
+            }
+
+            // Confidence
+            document.getElementById('confidenceValue').textContent = `${signal.confidence.toFixed(0)}%`;
+            
+            // Signal
+            const signalItem = document.getElementById('signalItem');
+            const signalVal = document.getElementById('signalValue');
+            signalVal.textContent = signal.signal;
+            if (signal.signal === 'BUY') {
+                signalVal.style.color = 'var(--accent-green)';
+                signalItem.className = 'context-item bullish';
+            } else if (signal.signal === 'SELL') {
+                signalVal.style.color = 'var(--accent-red)';
+                signalItem.className = 'context-item bearish';
+            } else {
+                signalVal.style.color = 'var(--text-secondary)';
+                signalItem.className = 'context-item';
+            }
+        }
+
+        function showToast(signalType, message) {
+            const toast = document.getElementById('toast');
+            toast.className = `toast show ${signalType === 'SELL' ? 'sell' : ''}`;
+            toast.querySelector('.toast-title').textContent = `${signalType} Signal Detected`;
+            toast.querySelector('.toast-message').textContent = message;
+            
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 5000);
+        }
+
+        // ==========================================
+        // CHARTS
+        // ==========================================
+        
+        let mainChart, priceChart, volumeChart;
+
+        function initCharts() {
+            // Main Chart (placeholder)
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Price',
+                        data: [],
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af' }
+                        }
+                    }
                 }
             });
+
+            // Price Chart
+            const priceCtx = document.getElementById('priceChart').getContext('2d');
+            priceChart = new Chart(priceCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Mid Price',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        borderWidth: 2,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 1,
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: { display: false }
+                    }
+                }
+            });
+
+            // Volume Chart
+            const volCtx = document.getElementById('volumeChart').getContext('2d');
+            volumeChart = new Chart(volCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Volume',
+                        data: [],
+                        backgroundColor: '#3b82f6',
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: '#374151' },
+                            ticks: { color: '#9ca3af' }
+                        },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(signal) {
+            if (!signal) return;
+
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+            // Добавляем новую точку
+            state.priceHistory.push({
+                time: timeLabel,
+                price: signal.midPrice,
+                confidence: signal.confidence
+            });
+
+            // Ограничиваем историю
+            if (state.priceHistory.length > 50) {
+                state.priceHistory.shift();
+            }
+
+            // Обновляем Price Chart
+            priceChart.data.labels = state.priceHistory.map(h => h.time);
+            priceChart.data.datasets[0].data = state.priceHistory.map(h => h.price);
+            priceChart.update('none');
+
+            // Обновляем Volume Chart (имитация на основе confidence)
+            volumeChart.data.labels = state.priceHistory.map(h => h.time);
+            volumeChart.data.datasets[0].data = state.priceHistory.map(h => h.confidence);
+            volumeChart.update('none');
+        }
+
+        // ==========================================
+        // MAIN UPDATE LOOP
+        // ==========================================
+        
+        async function updateData() {
+            try {
+                updateApiStatus('connecting', 'Updating...');
+
+                // Получаем рынок если еще нет
+                if (!state.currentMarket) {
+                    if (state.marketId) {
+                        state.currentMarket = await getMarketById(state.marketId);
+                    } else {
+                        state.currentMarket = await getMarkets();
+                        if (state.currentMarket) {
+                            state.marketId = state.currentMarket.id;
+                            localStorage.setItem('predictMarketId', state.marketId);
+                            // Подписываемся на WebSocket
+                            subscribeToMarket(state.marketId);
+                        }
+                    }
+                }
+
+                if (!state.currentMarket) {
+                    throw new Error('No markets found');
+                }
+
+                // Обновляем UI рынка
+                document.getElementById('marketId').textContent = state.currentMarket.id;
+                document.getElementById('marketStatusText').textContent = state.currentMarket.tradingStatus;
+                document.getElementById('feeRate').textContent = `${state.currentMarket.feeRateBps} bps`;
+                document.getElementById('chartTitle').textContent = state.currentMarket.title || 'BTC Prediction';
+
+                // Получаем ордербук
+                const orderbook = await getOrderbook(state.currentMarket.id);
+                state.orderbook = orderbook;
+                renderOrderbook(orderbook);
+
+                // Получаем последнюю сделку
+                const lastSale = await getLastSale(state.currentMarket.id);
+                if (lastSale) {
+                    document.getElementById('lastTradePrice').textContent = lastSale.price ? `$${lastSale.price}` : '--';
+                    document.getElementById('lastTradeSize').textContent = lastSale.size || '--';
+                    document.getElementById('lastTradeTime').textContent = lastSale.timestamp ? 
+                        new Date(lastSale.timestamp).toLocaleTimeString() : '--';
+                }
+
+                // Обновляем цены outcomes
+                updateOutcomes(state.currentMarket);
+
+                // Генерируем сигнал
+                const signal = generateSignal(state.currentMarket, orderbook, lastSale);
+                
+                // Обновляем UI
+                updateSignalUI(signal);
+                const confluence = updateConfluence(signal);
+                updateStructure(signal);
+                updateContext(signal);
+                updateCharts(signal);
+
+                // Обновляем цену в хедере
+                if (signal) {
+                    document.getElementById('currentPrice').textContent = `$${(signal.midPrice * 100).toFixed(1)}¢`;
+                    document.getElementById('priceChange').textContent = `Spread: ${signal.spreadPct}%`;
+                    document.getElementById('priceChange').style.color = signal.spreadPct < 3 ? 'var(--accent-green)' : 'var(--accent-yellow)';
+                }
+
+                updateApiStatus('connected', 'Connected');
+                document.getElementById('marketStatus').className = 'status-indicator';
+
+            } catch (error) {
+                console.error('Update error:', error);
+                updateApiStatus('error', error.message || 'Error');
+                document.getElementById('marketStatus').className = 'status-indicator error';
+            }
+        }
+
+        // ==========================================
+        // SETTINGS & INITIALIZATION
+        // ==========================================
+        
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('apiKeyInput').value = state.apiKey;
+            document.getElementById('envSelect').value = state.environment;
+            document.getElementById('marketIdInput').value = state.marketId || '';
+            document.getElementById('intervalInput').value = state.updateInterval;
+        }
+
+        function saveSettings() {
+            state.apiKey = document.getElementById('apiKeyInput').value.trim();
+            state.environment = document.getElementById('envSelect').value;
+            state.marketId = document.getElementById('marketIdInput').value.trim() || null;
+            state.updateInterval = parseInt(document.getElementById('intervalInput').value) || 5000;
+
+            // Сохраняем в localStorage
+            localStorage.setItem('predictApiKey', state.apiKey);
+            localStorage.setItem('predictEnv', state.environment);
+            localStorage.setItem('predictMarketId', state.marketId || '');
+            localStorage.setItem('predictInterval', state.updateInterval);
+
+            // Сбрасываем текущий рынок чтобы перезагрузить
+            state.currentMarket = null;
+
+            document.getElementById('settingsModal').classList.remove('active');
+
+            // Перезапускаем
+            if (updateTimer) clearInterval(updateTimer);
+            connectWebSocket();
+            updateData();
+            updateTimer = setInterval(updateData, state.updateInterval);
+        }
+
+        // Закрытие модалки по клику вне
+        document.getElementById('settingsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'settingsModal') {
+                document.getElementById('settingsModal').classList.remove('active');
+            }
         });
 
-        // Intersection Observer for animations
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: "0px 0px -50px 0px"
-        };
+        // ==========================================
+        // CLOCK & COUNTDOWN
+        // ==========================================
+        
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('utcTime').textContent = now.toUTCString().split(' ')[4];
+        }
 
-        const observer = new IntersectionObserver(function(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = "1";
-                    entry.target.style.transform = "translateY(0)";
-                }
-            });
-        }, observerOptions);
+        let countdownValue = 60;
+        function updateCountdown() {
+            countdownValue--;
+            if (countdownValue < 0) countdownValue = 60;
+            const mins = Math.floor(countdownValue / 60);
+            const secs = countdownValue % 60;
+            document.getElementById('countdown').textContent = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
 
-        document.querySelectorAll('.gallery-item, .service-card, .feature-item, .contact-card').forEach(el => {
-            el.style.opacity = "0";
-            el.style.transform = "translateY(20px)";
-            el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-            observer.observe(el);
+        // ==========================================
+        // STARTUP
+        // ==========================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(updateCountdown, 1000);
+
+            // Первый запуск
+            connectWebSocket();
+            updateData();
+            
+            // Устанавливаем интервал обновления
+            updateTimer = setInterval(updateData, state.updateInterval);
         });
     </script>
-
 </body>
 </html>
