@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predict.Fun BTC 15min Signal Bot</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         * {
             margin: 0;
@@ -43,7 +42,6 @@
             font-size: 12px;
             font-weight: 600;
             z-index: 1000;
-            transition: all 0.3s;
         }
 
         .api-status.connected {
@@ -56,12 +54,6 @@
             background: rgba(239, 68, 68, 0.2);
             color: var(--accent-red);
             border: 1px solid var(--accent-red);
-        }
-
-        .api-status.connecting {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-yellow);
-            border: 1px solid var(--accent-yellow);
         }
 
         .grid-container {
@@ -237,36 +229,6 @@
             font-size: 14px;
             font-weight: 700;
             font-family: 'Courier New', monospace;
-        }
-
-        .signal-box {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent-green);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        .signal-box.sell {
-            background: rgba(239, 68, 68, 0.1);
-            border-color: var(--accent-red);
-        }
-
-        .signal-text {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent-green);
-        }
-
-        .signal-box.sell .signal-text {
-            color: var(--accent-red);
-        }
-
-        .signal-sub {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
         }
 
         .main-content {
@@ -527,6 +489,236 @@
         .bid { color: var(--accent-green); }
         .ask { color: var(--accent-red); }
 
+        /* TRADING PANEL */
+        .trading-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+
+        .trade-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-buy:active {
+            transform: translateY(0);
+        }
+
+        .btn-sell {
+            background: linear-gradient(135deg, var(--accent-red), #dc2626);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-sell:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sell:active {
+            transform: translateY(0);
+        }
+
+        .trade-input {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .trade-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .trade-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .trade-info-item {
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .trade-info-label {
+            color: var(--text-secondary);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .trade-info-value {
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-top: 4px;
+        }
+
+        /* ALERT SETTINGS */
+        .alert-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+
+        .alert-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .alert-toggle:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-green);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        /* TRADE HISTORY */
+        .trade-history {
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .trade-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trade-buy { color: var(--accent-green); }
+        .trade-sell { color: var(--accent-red); }
+
+        /* SOUND ALERT OVERLAY */
+        .sound-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--bg-card);
+            border: 3px solid var(--accent-green);
+            border-radius: 20px;
+            padding: 40px 60px;
+            text-align: center;
+            z-index: 3000;
+            transition: all 0.3s;
+            box-shadow: 0 0 60px rgba(16, 185, 129, 0.5);
+        }
+
+        .sound-alert.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .sound-alert.sell {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 60px rgba(239, 68, 68, 0.5);
+        }
+
+        .sound-alert-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .sound-alert-title {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .sound-alert-price {
+            font-size: 24px;
+            font-family: 'Courier New', monospace;
+            color: var(--text-secondary);
+        }
+
+        .sound-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2999;
+            display: none;
+        }
+
+        .sound-overlay.show {
+            display: block;
+        }
+
         .settings-modal {
             display: none;
             position: fixed;
@@ -587,12 +779,6 @@
             border-color: var(--accent-blue);
         }
 
-        .form-hint {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
         .btn-primary {
             background: var(--accent-blue);
             color: white;
@@ -603,10 +789,6 @@
             cursor: pointer;
             width: 100%;
             margin-top: 8px;
-        }
-
-        .btn-primary:hover {
-            background: #2563eb;
         }
 
         .toast {
@@ -630,16 +812,6 @@
 
         .toast.sell {
             border-color: var(--accent-red);
-        }
-
-        .toast-title {
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .toast-message {
-            font-size: 13px;
-            color: var(--text-secondary);
         }
 
         ::-webkit-scrollbar {
@@ -674,6 +846,14 @@
 </head>
 <body>
     <div class="api-status connecting" id="apiStatus">Connecting...</div>
+
+    <!-- Sound Alert Overlay -->
+    <div class="sound-overlay" id="soundOverlay"></div>
+    <div class="sound-alert" id="soundAlert">
+        <div class="sound-alert-icon" id="alertIcon">🔔</div>
+        <div class="sound-alert-title" id="alertTitle">BUY SIGNAL</div>
+        <div class="sound-alert-price" id="alertPrice">Price: 75¢</div>
+    </div>
 
     <div class="grid-container">
         <header class="header">
@@ -816,6 +996,7 @@
         </main>
 
         <aside class="sidebar-right">
+            <!-- SIGNAL CARD -->
             <div class="signal-card" id="mainSignal">
                 <div class="panel-header" style="justify-content: center;">
                     <span>Trading Signal</span>
@@ -831,6 +1012,68 @@
                 </div>
             </div>
 
+            <!-- TRADING PANEL -->
+            <div class="trading-panel">
+                <div class="panel-header" style="justify-content: center;">
+                    <span>🚀 Manual Trading</span>
+                </div>
+                
+                <div class="trade-info">
+                    <div class="trade-info-item">
+                        <div class="trade-info-label">Best Bid</div>
+                        <div class="trade-info-value" id="bestBid" style="color: var(--accent-green);">--</div>
+                    </div>
+                    <div class="trade-info-item">
+                        <div class="trade-info-label">Best Ask</div>
+                        <div class="trade-info-value" id="bestAsk" style="color: var(--accent-red);">--</div>
+                    </div>
+                </div>
+
+                <input type="number" class="trade-input" id="tradeSize" placeholder="Size (e.g. 100)" value="100" min="1">
+                
+                <div class="trade-buttons">
+                    <button class="btn-buy" onclick="placeTrade('BUY')">
+                        📈 BUY YES<br>
+                        <small style="font-size: 12px; opacity: 0.8;">Click to trade</small>
+                    </button>
+                    <button class="btn-sell" onclick="placeTrade('SELL')">
+                        📉 BUY NO<br>
+                        <small style="font-size: 12px; opacity: 0.8;">Click to trade</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ALERT SETTINGS -->
+            <div class="alert-panel">
+                <div class="panel-header">
+                    <span>🔔 Sound Alerts</span>
+                </div>
+                <div class="alert-toggle">
+                    <span style="font-size: 12px;">Buy Signal Sound</span>
+                    <div class="toggle-switch active" id="toggleBuy" onclick="toggleAlert('buy')"></div>
+                </div>
+                <div class="alert-toggle">
+                    <span style="font-size: 12px;">Sell Signal Sound</span>
+                    <div class="toggle-switch active" id="toggleSell" onclick="toggleAlert('sell')"></div>
+                </div>
+                <div class="alert-toggle">
+                    <span style="font-size: 12px;">Test Sound</span>
+                    <button onclick="testSound()" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">TEST</button>
+                </div>
+            </div>
+
+            <!-- TRADE HISTORY -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span>📋 Trade History</span>
+                    <button onclick="clearHistory()" style="background: transparent; border: none; color: var(--accent-red); cursor: pointer; font-size: 10px;">CLEAR</button>
+                </div>
+                <div class="trade-history" id="tradeHistory">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 10px;">No trades yet</div>
+                </div>
+            </div>
+
+            <!-- CONFLUENCE -->
             <div class="panel">
                 <div class="panel-header">
                     <span>Confluence Score</span>
@@ -849,17 +1092,7 @@
                 </ul>
             </div>
 
-            <div class="panel">
-                <div class="panel-header">
-                    <span>Market Structure</span>
-                    <span id="structureStatus" style="color: var(--accent-yellow);">--</span>
-                </div>
-                <div id="structureAlert" style="background: rgba(245,158,11,0.1); border: 1px solid var(--accent-yellow); border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="color: var(--accent-yellow); font-weight: 700; font-size: 14px;" id="structureText">Analyzing...</div>
-                    <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;" id="structureSub">Waiting for market data</div>
-                </div>
-            </div>
-
+            <!-- ENTRY WINDOW -->
             <div class="entry-window" id="entryWindow">
                 <div class="panel-header" style="justify-content: center; color: var(--accent-green);">
                     <span>ENTRY WINDOW</span>
@@ -870,6 +1103,7 @@
         </aside>
     </div>
 
+    <!-- SETTINGS MODAL -->
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
             <div class="settings-title">⚙️ API Configuration</div>
@@ -877,21 +1111,14 @@
             <div class="form-group">
                 <label class="form-label">API Key (x-api-key)</label>
                 <input type="password" class="form-input" id="apiKeyInput" value="e07ea981-7dd9-41f4-b2ec-47890f1d4f9d">
-                <div class="form-hint">Ваш API ключ уже введен</div>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Environment</label>
                 <select class="form-input" id="envSelect">
-                    <option value="testnet">Testnet (api-testnet.predict.fun)</option>
-                    <option value="mainnet" selected>Mainnet (api.predict.fun)</option>
+                    <option value="testnet">Testnet</option>
+                    <option value="mainnet" selected>Mainnet</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Market ID (опционально)</label>
-                <input type="text" class="form-input" id="marketIdInput" placeholder="Оставьте пустым для поиска BTC рынков">
-                <div class="form-hint">Если не указан, будет найден первый доступный BTC UP/DOWN рынок</div>
             </div>
 
             <div class="form-group">
@@ -903,6 +1130,7 @@
         </div>
     </div>
 
+    <!-- TOAST -->
     <div class="toast" id="toast">
         <div class="toast-title">Signal Alert</div>
         <div class="toast-message">New trading signal detected!</div>
@@ -913,17 +1141,10 @@
         // CONFIGURATION
         // ==========================================
         const CONFIG = {
-            testnet: {
-                baseURL: 'https://api-testnet.predict.fun',
-                wsURL: 'wss://ws.predict.fun/ws'
-            },
-            mainnet: {
-                baseURL: 'https://api.predict.fun',
-                wsURL: 'wss://ws.predict.fun/ws'
-            }
+            testnet: { baseURL: 'https://api-testnet.predict.fun', wsURL: 'wss://ws.predict.fun/ws' },
+            mainnet: { baseURL: 'https://api.predict.fun', wsURL: 'wss://ws.predict.fun/ws' }
         };
 
-        // Твой API ключ
         const DEFAULT_API_KEY = 'e07ea981-7dd9-41f4-b2ec-47890f1d4f9d';
 
         let state = {
@@ -934,15 +1155,115 @@
             currentMarket: null,
             orderbook: null,
             lastSale: null,
-            wsConnected: false,
             priceHistory: [],
             lastSignal: null,
-            isRunning: false
+            alerts: { buy: true, sell: true },
+            tradeHistory: JSON.parse(localStorage.getItem('tradeHistory') || '[]')
         };
 
         let updateTimer = null;
         let ws = null;
+        let audioContext = null;
         let charts = {};
+
+        // ==========================================
+        // AUDIO SYSTEM
+        // ==========================================
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playAlertSound(type) {
+            initAudio();
+            
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'BUY') {
+                // Бычий звук - восходящая частота
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+                oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.3);
+                
+                // Повтор для пульсации
+                setTimeout(() => {
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioContext.destination);
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, audioContext.currentTime);
+                    gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    osc2.start();
+                    osc2.stop(audioContext.currentTime + 0.5);
+                }, 150);
+                
+            } else {
+                // Медвежий звук - нисходящая частота
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.4);
+            }
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        function showSoundAlert(signal, price) {
+            const overlay = document.getElementById('soundOverlay');
+            const alert = document.getElementById('soundAlert');
+            const icon = document.getElementById('alertIcon');
+            const title = document.getElementById('alertTitle');
+            const priceEl = document.getElementById('alertPrice');
+
+            overlay.classList.add('show');
+            alert.classList.add('show');
+            
+            if (signal === 'BUY') {
+                alert.className = 'sound-alert show';
+                icon.textContent = '📈';
+                title.textContent = 'BUY SIGNAL';
+                title.style.color = 'var(--accent-green)';
+            } else {
+                alert.className = 'sound-alert sell show';
+                icon.textContent = '📉';
+                title.textContent = 'SELL SIGNAL';
+                title.style.color = 'var(--accent-red)';
+            }
+            
+            priceEl.textContent = `Price: ${price}`;
+
+            // Авто-закрытие через 3 секунды
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                alert.classList.remove('show');
+            }, 3000);
+        }
+
+        function testSound() {
+            playAlertSound('BUY');
+            setTimeout(() => playAlertSound('SELL'), 600);
+        }
+
+        function toggleAlert(type) {
+            state.alerts[type] = !state.alerts[type];
+            document.getElementById('toggle' + type.charAt(0).toUpperCase() + type.slice(1)).classList.toggle('active');
+        }
 
         // ==========================================
         // API FUNCTIONS
@@ -962,12 +1283,8 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-                return data;
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
             } catch (error) {
                 console.error('API Error:', error);
                 throw error;
@@ -984,7 +1301,6 @@
             const data = await apiRequest(`/v1/markets?${params}`);
             
             if (data.success && data.data && data.data.length > 0) {
-                // Ищем BTC рынок
                 const btcMarket = data.data.find(m => {
                     const title = (m.title || '').toLowerCase();
                     const question = (m.question || '').toLowerCase();
@@ -996,11 +1312,6 @@
             throw new Error('No markets found');
         }
 
-        async function getMarketById(marketId) {
-            const data = await apiRequest(`/v1/markets/${marketId}`);
-            return data.success ? data.data : null;
-        }
-
         async function getOrderbook(marketId) {
             const data = await apiRequest(`/v1/markets/${marketId}/orderbook`);
             return data.success ? data.data : null;
@@ -1010,77 +1321,78 @@
             try {
                 const data = await apiRequest(`/v1/markets/${marketId}/last-sale`);
                 return data.success ? data.data : null;
-            } catch (e) {
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
         // ==========================================
-        // WEBSOCKET
+        // TRADING FUNCTIONS
         // ==========================================
         
-        function connectWebSocket() {
-            if (ws) {
-                try { ws.close(); } catch(e) {}
+        function placeTrade(type) {
+            if (!state.orderbook || !state.currentMarket) {
+                alert('No market data available. Wait for connection.');
+                return;
             }
 
-            const wsUrl = `${CONFIG[state.environment].wsURL}?apiKey=${state.apiKey}`;
+            const size = parseFloat(document.getElementById('tradeSize').value) || 100;
+            const bestBid = parseFloat(state.orderbook.bids?.[0]?.price || 0);
+            const bestAsk = parseFloat(state.orderbook.asks?.[0]?.price || 0);
             
-            console.log('Connecting WebSocket...');
-            ws = new WebSocket(wsUrl);
+            // Расчет примерной цены
+            const price = type === 'BUY' ? bestAsk : bestBid;
+            const total = (size * price).toFixed(2);
 
-            ws.onopen = () => {
-                console.log('WebSocket connected');
-                state.wsConnected = true;
-                updateApiStatus('connected', 'Real-time');
+            const confirmMsg = `${type} ${size} shares @ ~${(price * 100).toFixed(1)}¢\nTotal: ~$${total}\n\nConfirm trade?`;
+            
+            if (confirm(confirmMsg)) {
+                // Сохраняем в историю (paper trading)
+                const trade = {
+                    type: type,
+                    side: type === 'BUY' ? 'YES' : 'NO',
+                    size: size,
+                    price: price,
+                    total: total,
+                    time: new Date().toLocaleTimeString(),
+                    market: state.currentMarket.title
+                };
                 
-                if (state.marketId) {
-                    subscribeToMarket(state.marketId);
-                }
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    handleWebSocketMessage(data);
-                } catch (e) {
-                    console.error('WS message error:', e);
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                state.wsConnected = false;
-                updateApiStatus('error', 'WS Error');
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket closed');
-                state.wsConnected = false;
-                updateApiStatus('error', 'Reconnecting...');
-                setTimeout(connectWebSocket, 5000);
-            };
+                state.tradeHistory.unshift(trade);
+                if (state.tradeHistory.length > 50) state.tradeHistory.pop();
+                
+                localStorage.setItem('tradeHistory', JSON.stringify(state.tradeHistory));
+                renderTradeHistory();
+                
+                // Открываем Predict.fun для реальной торговли
+                const marketUrl = `https://predict.fun/markets/${state.currentMarket.id}`;
+                window.open(marketUrl, '_blank');
+                
+                showToast(type, `Trade prepared! Opening Predict.fun...`);
+            }
         }
 
-        function subscribeToMarket(marketId) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        function renderTradeHistory() {
+            const container = document.getElementById('tradeHistory');
             
-            ws.send(JSON.stringify({
-                method: "subscribe",
-                topic: `market:${marketId}`,
-                requestId: Date.now()
-            }));
+            if (state.tradeHistory.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 10px;">No trades yet</div>';
+                return;
+            }
+
+            container.innerHTML = state.tradeHistory.map(t => `
+                <div class="trade-row">
+                    <span class="${t.type === 'BUY' ? 'trade-buy' : 'trade-sell'}">
+                        ${t.type} ${t.side} ${t.size} @ ${(t.price * 100).toFixed(1)}¢
+                    </span>
+                    <span style="color: var(--text-secondary);">${t.time}</span>
+                </div>
+            `).join('');
         }
 
-        function handleWebSocketMessage(data) {
-            if (data.type === 'M' && data.topic === 'heartbeat') {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        method: "heartbeat",
-                        timestamp: data.timestamp
-                    }));
-                }
-                return;
+        function clearHistory() {
+            if (confirm('Clear all trade history?')) {
+                state.tradeHistory = [];
+                localStorage.removeItem('tradeHistory');
+                renderTradeHistory();
             }
         }
 
@@ -1102,9 +1414,16 @@
                 return;
             }
 
+            // Обновляем лучшие цены для торговли
+            if (orderbook.bids?.[0]) {
+                document.getElementById('bestBid').textContent = parseFloat(orderbook.bids[0].price).toFixed(3);
+            }
+            if (orderbook.asks?.[0]) {
+                document.getElementById('bestAsk').textContent = parseFloat(orderbook.asks[0].price).toFixed(3);
+            }
+
             let html = '';
             
-            // Asks
             if (orderbook.asks && orderbook.asks.length > 0) {
                 const asks = orderbook.asks.slice(0, 5).reverse();
                 asks.forEach(ask => {
@@ -1115,7 +1434,6 @@
                 });
             }
 
-            // Spread
             if (orderbook.bids?.[0] && orderbook.asks?.[0]) {
                 const spread = parseFloat(orderbook.asks[0].price) - parseFloat(orderbook.bids[0].price);
                 html += `<div class="orderbook-row" style="background: var(--bg-secondary); margin: 4px 0;">
@@ -1124,7 +1442,6 @@
                 </div>`;
             }
 
-            // Bids
             if (orderbook.bids && orderbook.bids.length > 0) {
                 orderbook.bids.slice(0, 5).forEach(bid => {
                     html += `<div class="orderbook-row">
@@ -1138,12 +1455,7 @@
         }
 
         function updateOutcomes(orderbook) {
-            if (!orderbook?.bids?.[0] || !orderbook?.asks?.[0]) {
-                document.getElementById('yesPrice').textContent = '--';
-                document.getElementById('noPrice').textContent = '--';
-                document.getElementById('spread').textContent = '--';
-                return;
-            }
+            if (!orderbook?.bids?.[0] || !orderbook?.asks?.[0]) return;
 
             const bestBid = parseFloat(orderbook.bids[0].price);
             const bestAsk = parseFloat(orderbook.asks[0].price);
@@ -1231,7 +1543,12 @@
             riskVal.textContent = `Risk: ${risk}`;
             riskVal.style.color = signal.spreadPct > 5 ? 'var(--accent-red)' : signal.spreadPct > 2 ? 'var(--accent-yellow)' : 'var(--accent-green)';
 
+            // ЗВУКОВОЙ АЛЕРТ при смене сигнала
             if (state.lastSignal !== signal.signal && signal.signal !== 'NEUTRAL') {
+                if (state.alerts[signal.signal.toLowerCase()]) {
+                    playAlertSound(signal.signal);
+                    showSoundAlert(signal.signal, priceCents + '¢');
+                }
                 showToast(signal.signal, `${priceCents}¢ | Conf: ${signal.confidence.toFixed(0)}%`);
                 state.lastSignal = signal.signal;
             }
@@ -1265,46 +1582,6 @@
                     <span class="check-icon">${c.passed ? '✓' : '○'}</span>${c.name}
                 </li>
             `).join('');
-        }
-
-        function updateStructure(signal) {
-            const box = document.getElementById('structureAlert');
-            const status = document.getElementById('structureStatus');
-            const text = document.getElementById('structureText');
-            const sub = document.getElementById('structureSub');
-
-            if (!signal) {
-                box.style.cssText = 'background: rgba(245,158,11,0.1); border: 1px solid var(--accent-yellow); border-radius: 8px; padding: 12px; text-align: center;';
-                status.textContent = 'WAIT';
-                status.style.color = 'var(--accent-yellow)';
-                text.textContent = 'Analyzing...';
-                text.style.color = 'var(--accent-yellow)';
-                sub.textContent = 'No data';
-                return;
-            }
-
-            if (signal.midPrice >= 0.5 && signal.midPrice <= 0.75) {
-                box.style.cssText = 'background: rgba(16,185,129,0.1); border: 1px solid var(--accent-green); border-radius: 8px; padding: 12px; text-align: center;';
-                status.textContent = 'GOOD';
-                status.style.color = 'var(--accent-green)';
-                text.textContent = 'IN ENTRY ZONE';
-                text.style.color = 'var(--accent-green)';
-                sub.textContent = `YES @ ${(signal.midPrice*100).toFixed(1)}¢`;
-            } else if (signal.midPrice >= 0.25 && signal.midPrice < 0.5) {
-                box.style.cssText = 'background: rgba(239,68,68,0.1); border: 1px solid var(--accent-red); border-radius: 8px; padding: 12px; text-align: center;';
-                status.textContent = 'GOOD';
-                status.style.color = 'var(--accent-red)';
-                text.textContent = 'IN ENTRY ZONE';
-                text.style.color = 'var(--accent-red)';
-                sub.textContent = `NO @ ${((1-signal.midPrice)*100).toFixed(1)}¢`;
-            } else {
-                box.style.cssText = 'background: rgba(245,158,11,0.1); border: 1px solid var(--accent-yellow); border-radius: 8px; padding: 12px; text-align: center;';
-                status.textContent = 'CAUTION';
-                status.style.color = 'var(--accent-yellow)';
-                text.textContent = 'OUT OF ZONE';
-                text.style.color = 'var(--accent-yellow)';
-                sub.textContent = 'Wait for entry';
-            }
         }
 
         function updateContext(signal) {
@@ -1434,31 +1711,23 @@
                 updateApiStatus('connecting', 'Updating...');
 
                 if (!state.currentMarket) {
-                    if (state.marketId) {
-                        state.currentMarket = await getMarketById(state.marketId);
-                    } else {
-                        state.currentMarket = await getMarkets();
-                        if (state.currentMarket) {
-                            state.marketId = state.currentMarket.id;
-                            subscribeToMarket(state.marketId);
-                        }
+                    state.currentMarket = await getMarkets();
+                    if (state.currentMarket) {
+                        state.marketId = state.currentMarket.id;
                     }
                 }
 
                 if (!state.currentMarket) throw new Error('No market');
 
-                // Update market info
                 document.getElementById('marketId').textContent = state.currentMarket.id;
                 document.getElementById('marketStatusText').textContent = state.currentMarket.tradingStatus || 'OPEN';
                 document.getElementById('feeRate').textContent = (state.currentMarket.feeRateBps || 0) + ' bps';
                 document.getElementById('chartTitle').textContent = state.currentMarket.title || 'BTC Prediction';
 
-                // Get orderbook
                 state.orderbook = await getOrderbook(state.currentMarket.id);
                 renderOrderbook(state.orderbook);
                 updateOutcomes(state.orderbook);
 
-                // Get last sale
                 state.lastSale = await getLastSale(state.currentMarket.id);
                 if (state.lastSale) {
                     document.getElementById('lastTradePrice').textContent = state.lastSale.price ? '$' + parseFloat(state.lastSale.price).toFixed(3) : '--';
@@ -1467,17 +1736,13 @@
                         new Date(state.lastSale.timestamp).toLocaleTimeString() : '--';
                 }
 
-                // Generate signal
                 const signal = generateSignal(state.orderbook);
                 
-                // Update all UI
                 updateSignalUI(signal);
                 updateConfluence(signal);
-                updateStructure(signal);
                 updateContext(signal);
                 updateCharts(signal);
 
-                // Update header price
                 if (signal) {
                     document.getElementById('currentPrice').textContent = (signal.midPrice * 100).toFixed(1) + '¢';
                     document.getElementById('priceChange').textContent = `Spread: ${signal.spreadPct}%`;
@@ -1505,14 +1770,12 @@
         function saveSettings() {
             state.apiKey = document.getElementById('apiKeyInput').value.trim() || DEFAULT_API_KEY;
             state.environment = document.getElementById('envSelect').value;
-            state.marketId = document.getElementById('marketIdInput').value.trim() || null;
             state.updateInterval = parseInt(document.getElementById('intervalInput').value) || 3000;
-            state.currentMarket = null; // Reset to fetch new
+            state.currentMarket = null;
 
             document.getElementById('settingsModal').classList.remove('active');
 
             if (updateTimer) clearInterval(updateTimer);
-            connectWebSocket();
             updateData();
             updateTimer = setInterval(updateData, state.updateInterval);
         }
@@ -1523,7 +1786,6 @@
             }
         });
 
-        // Clock
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {hour12:false});
@@ -1542,11 +1804,16 @@
         // Startup
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
+            renderTradeHistory();
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(updateCountdown, 1000);
 
-            connectWebSocket();
+            // Инициализация аудио по клику (требование браузеров)
+            document.addEventListener('click', () => {
+                initAudio();
+            }, { once: true });
+
             updateData();
             updateTimer = setInterval(updateData, state.updateInterval);
         });
