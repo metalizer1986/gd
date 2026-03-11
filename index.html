@@ -56,6 +56,12 @@
             border: 1px solid var(--accent-red);
         }
 
+        .api-status.demo {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-yellow);
+            border: 1px solid var(--accent-yellow);
+        }
+
         .grid-container {
             display: grid;
             grid-template-columns: 280px 1fr 320px;
@@ -206,6 +212,11 @@
         .status-indicator.error {
             background: var(--accent-red);
             box-shadow: 0 0 8px var(--accent-red);
+        }
+
+        .status-indicator.demo {
+            background: var(--accent-yellow);
+            box-shadow: 0 0 8px var(--accent-yellow);
         }
 
         .metric-row {
@@ -489,7 +500,6 @@
         .bid { color: var(--accent-green); }
         .ask { color: var(--accent-red); }
 
-        /* TRADING PANEL */
         .trading-panel {
             background: var(--bg-card);
             border-radius: 12px;
@@ -523,10 +533,6 @@
             box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
         }
 
-        .btn-buy:active {
-            transform: translateY(0);
-        }
-
         .btn-sell {
             background: linear-gradient(135deg, var(--accent-red), #dc2626);
             color: white;
@@ -545,10 +551,6 @@
             box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
         }
 
-        .btn-sell:active {
-            transform: translateY(0);
-        }
-
         .trade-input {
             width: 100%;
             background: var(--bg-secondary);
@@ -559,11 +561,6 @@
             font-family: 'Courier New', monospace;
             font-size: 14px;
             margin-bottom: 12px;
-        }
-
-        .trade-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
         }
 
         .trade-info {
@@ -593,7 +590,6 @@
             margin-top: 4px;
         }
 
-        /* ALERT SETTINGS */
         .alert-panel {
             background: var(--bg-card);
             border-radius: 12px;
@@ -644,7 +640,6 @@
             left: 22px;
         }
 
-        /* TRADE HISTORY */
         .trade-history {
             max-height: 150px;
             overflow-y: auto;
@@ -662,7 +657,6 @@
         .trade-buy { color: var(--accent-green); }
         .trade-sell { color: var(--accent-red); }
 
-        /* SOUND ALERT OVERLAY */
         .sound-alert {
             position: fixed;
             top: 50%;
@@ -774,11 +768,6 @@
             font-size: 13px;
         }
 
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-blue);
-        }
-
         .btn-primary {
             background: var(--accent-blue);
             color: white;
@@ -814,6 +803,31 @@
             border-color: var(--accent-red);
         }
 
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .demo-badge {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-yellow);
+            border: 1px solid var(--accent-yellow);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -846,8 +860,8 @@
 </head>
 <body>
     <div class="api-status connecting" id="apiStatus">Connecting...</div>
+    <div class="demo-badge" id="demoBadge" style="display: none;">DEMO MODE</div>
 
-    <!-- Sound Alert Overlay -->
     <div class="sound-overlay" id="soundOverlay"></div>
     <div class="sound-alert" id="soundAlert">
         <div class="sound-alert-icon" id="alertIcon">🔔</div>
@@ -865,7 +879,7 @@
             <div class="header-center">
                 <div class="price-display">
                     <div class="price-main" id="currentPrice">--</div>
-                    <div class="price-change" id="priceChange">Initializing...</div>
+                    <div class="price-change" id="priceChange">Connecting...</div>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 16px;">
@@ -895,6 +909,7 @@
                     <span class="metric-label">Fee Rate</span>
                     <span class="metric-value" id="feeRate">--</span>
                 </div>
+                <div id="errorContainer"></div>
             </div>
 
             <div class="panel">
@@ -927,21 +942,6 @@
                         <span class="metric-label">Spread</span>
                         <span class="metric-value" id="spread">--</span>
                     </div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <span>Last Trade</span>
-                    <span id="lastTradeTime" style="color: var(--text-secondary);">--</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Price</span>
-                    <span class="metric-value" id="lastTradePrice">--</span>
-                </div>
-                <div class="metric-row">
-                    <span class="metric-label">Size</span>
-                    <span class="metric-value" id="lastTradeSize">--</span>
                 </div>
             </div>
         </aside>
@@ -996,7 +996,6 @@
         </main>
 
         <aside class="sidebar-right">
-            <!-- SIGNAL CARD -->
             <div class="signal-card" id="mainSignal">
                 <div class="panel-header" style="justify-content: center;">
                     <span>Trading Signal</span>
@@ -1012,7 +1011,6 @@
                 </div>
             </div>
 
-            <!-- TRADING PANEL -->
             <div class="trading-panel">
                 <div class="panel-header" style="justify-content: center;">
                     <span>🚀 Manual Trading</span>
@@ -1043,7 +1041,6 @@
                 </div>
             </div>
 
-            <!-- ALERT SETTINGS -->
             <div class="alert-panel">
                 <div class="panel-header">
                     <span>🔔 Sound Alerts</span>
@@ -1062,7 +1059,6 @@
                 </div>
             </div>
 
-            <!-- TRADE HISTORY -->
             <div class="panel">
                 <div class="panel-header">
                     <span>📋 Trade History</span>
@@ -1073,7 +1069,6 @@
                 </div>
             </div>
 
-            <!-- CONFLUENCE -->
             <div class="panel">
                 <div class="panel-header">
                     <span>Confluence Score</span>
@@ -1092,7 +1087,6 @@
                 </ul>
             </div>
 
-            <!-- ENTRY WINDOW -->
             <div class="entry-window" id="entryWindow">
                 <div class="panel-header" style="justify-content: center; color: var(--accent-green);">
                     <span>ENTRY WINDOW</span>
@@ -1103,7 +1097,6 @@
         </aside>
     </div>
 
-    <!-- SETTINGS MODAL -->
     <div class="settings-modal" id="settingsModal">
         <div class="settings-content">
             <div class="settings-title">⚙️ API Configuration</div>
@@ -1111,6 +1104,9 @@
             <div class="form-group">
                 <label class="form-label">API Key (x-api-key)</label>
                 <input type="password" class="form-input" id="apiKeyInput" value="e07ea981-7dd9-41f4-b2ec-47890f1d4f9d">
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                    Если API не работает - включится DEMO режим с тестовыми данными
+                </div>
             </div>
 
             <div class="form-group">
@@ -1130,7 +1126,6 @@
         </div>
     </div>
 
-    <!-- TOAST -->
     <div class="toast" id="toast">
         <div class="toast-title">Signal Alert</div>
         <div class="toast-message">New trading signal detected!</div>
@@ -1158,13 +1153,62 @@
             priceHistory: [],
             lastSignal: null,
             alerts: { buy: true, sell: true },
-            tradeHistory: JSON.parse(localStorage.getItem('tradeHistory') || '[]')
+            tradeHistory: JSON.parse(localStorage.getItem('tradeHistory') || '[]'),
+            demoMode: false,
+            demoPrice: 0.65
         };
 
         let updateTimer = null;
         let ws = null;
         let audioContext = null;
         let charts = {};
+
+        // ==========================================
+        // DEMO MODE - когда API не работает
+        // ==========================================
+        
+        function generateDemoData() {
+            // Генерируем реалистичные демо-данные
+            const basePrice = state.demoPrice;
+            const noise = (Math.random() - 0.5) * 0.1;
+            const midPrice = Math.max(0.1, Math.min(0.9, basePrice + noise));
+            
+            const spread = 0.02 + Math.random() * 0.03;
+            const bestBid = Math.max(0.01, midPrice - spread/2);
+            const bestAsk = Math.min(0.99, midPrice + spread/2);
+            
+            return {
+                orderbook: {
+                    bids: [
+                        { price: bestBid.toFixed(3), size: (Math.random() * 500 + 100).toFixed(2) },
+                        { price: (bestBid - 0.01).toFixed(3), size: (Math.random() * 300 + 50).toFixed(2) },
+                        { price: (bestBid - 0.02).toFixed(3), size: (Math.random() * 200 + 30).toFixed(2) }
+                    ],
+                    asks: [
+                        { price: bestAsk.toFixed(3), size: (Math.random() * 500 + 100).toFixed(2) },
+                        { price: (bestAsk + 0.01).toFixed(3), size: (Math.random() * 300 + 50).toFixed(2) },
+                        { price: (bestAsk + 0.02).toFixed(3), size: (Math.random() * 200 + 30).toFixed(2) }
+                    ]
+                },
+                market: {
+                    id: 12345,
+                    title: 'BTC/USD Up or Down - Demo Mode',
+                    tradingStatus: 'OPEN',
+                    feeRateBps: 200
+                }
+            };
+        }
+
+        function enableDemoMode() {
+            state.demoMode = true;
+            document.getElementById('demoBadge').style.display = 'block';
+            updateApiStatus('demo', 'DEMO MODE');
+            document.getElementById('marketStatus').className = 'status-indicator demo';
+            
+            // Показываем предупреждение
+            document.getElementById('errorContainer').innerHTML = 
+                '<div class="error-message">⚠️ API недоступен. DEMO режим с тестовыми данными.</div>';
+        }
 
         // ==========================================
         // AUDIO SYSTEM
@@ -1178,25 +1222,19 @@
 
         function playAlertSound(type) {
             initAudio();
-            
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (audioContext.state === 'suspended') audioContext.resume();
 
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
             if (type === 'BUY') {
-                // Бычий звук - восходящая частота
                 oscillator.type = 'sine';
                 oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
                 oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.3);
                 
-                // Повтор для пульсации
                 setTimeout(() => {
                     const osc2 = audioContext.createOscillator();
                     const gain2 = audioContext.createGain();
@@ -1209,9 +1247,7 @@
                     osc2.start();
                     osc2.stop(audioContext.currentTime + 0.5);
                 }, 150);
-                
             } else {
-                // Медвежий звук - нисходящая частота
                 oscillator.type = 'sawtooth';
                 oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
                 oscillator.frequency.exponentialRampToValueAtTime(110, audioContext.currentTime + 0.4);
@@ -1219,7 +1255,6 @@
 
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.5);
         }
@@ -1248,7 +1283,6 @@
             
             priceEl.textContent = `Price: ${price}`;
 
-            // Авто-закрытие через 3 секунды
             setTimeout(() => {
                 overlay.classList.remove('show');
                 alert.classList.remove('show');
@@ -1274,14 +1308,20 @@
             const url = `${baseURL}${endpoint}`;
             
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 сек таймаут
+                
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'x-api-key': state.apiKey
-                    }
+                    },
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
 
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return await response.json();
@@ -1329,23 +1369,21 @@
         // ==========================================
         
         function placeTrade(type) {
-            if (!state.orderbook || !state.currentMarket) {
-                alert('No market data available. Wait for connection.');
-                return;
-            }
-
             const size = parseFloat(document.getElementById('tradeSize').value) || 100;
-            const bestBid = parseFloat(state.orderbook.bids?.[0]?.price || 0);
-            const bestAsk = parseFloat(state.orderbook.asks?.[0]?.price || 0);
+            let price = 0.5;
             
-            // Расчет примерной цены
-            const price = type === 'BUY' ? bestAsk : bestBid;
+            if (state.orderbook?.asks?.[0] && state.orderbook?.bids?.[0]) {
+                const bestBid = parseFloat(state.orderbook.bids[0].price);
+                const bestAsk = parseFloat(state.orderbook.asks[0].price);
+                price = type === 'BUY' ? bestAsk : bestBid;
+            } else if (state.demoMode) {
+                price = type === 'BUY' ? state.demoPrice + 0.01 : state.demoPrice - 0.01;
+            }
+            
             const total = (size * price).toFixed(2);
-
             const confirmMsg = `${type} ${size} shares @ ~${(price * 100).toFixed(1)}¢\nTotal: ~$${total}\n\nConfirm trade?`;
             
             if (confirm(confirmMsg)) {
-                // Сохраняем в историю (paper trading)
                 const trade = {
                     type: type,
                     side: type === 'BUY' ? 'YES' : 'NO',
@@ -1353,7 +1391,7 @@
                     price: price,
                     total: total,
                     time: new Date().toLocaleTimeString(),
-                    market: state.currentMarket.title
+                    market: state.currentMarket?.title || 'Demo Market'
                 };
                 
                 state.tradeHistory.unshift(trade);
@@ -1362,11 +1400,12 @@
                 localStorage.setItem('tradeHistory', JSON.stringify(state.tradeHistory));
                 renderTradeHistory();
                 
-                // Открываем Predict.fun для реальной торговли
-                const marketUrl = `https://predict.fun/markets/${state.currentMarket.id}`;
-                window.open(marketUrl, '_blank');
+                if (!state.demoMode && state.currentMarket) {
+                    const marketUrl = `https://predict.fun/markets/${state.currentMarket.id}`;
+                    window.open(marketUrl, '_blank');
+                }
                 
-                showToast(type, `Trade prepared! Opening Predict.fun...`);
+                showToast(type, state.demoMode ? `Demo trade recorded!` : `Trade prepared! Opening Predict.fun...`);
             }
         }
 
@@ -1414,7 +1453,6 @@
                 return;
             }
 
-            // Обновляем лучшие цены для торговли
             if (orderbook.bids?.[0]) {
                 document.getElementById('bestBid').textContent = parseFloat(orderbook.bids[0].price).toFixed(3);
             }
@@ -1543,7 +1581,6 @@
             riskVal.textContent = `Risk: ${risk}`;
             riskVal.style.color = signal.spreadPct > 5 ? 'var(--accent-red)' : signal.spreadPct > 2 ? 'var(--accent-yellow)' : 'var(--accent-green)';
 
-            // ЗВУКОВОЙ АЛЕРТ при смене сигнала
             if (state.lastSignal !== signal.signal && signal.signal !== 'NEUTRAL') {
                 if (state.alerts[signal.signal.toLowerCase()]) {
                     playAlertSound(signal.signal);
@@ -1558,7 +1595,7 @@
             let score = 0;
             const checks = [];
 
-            if (state.currentMarket) { score += 4; checks.push({name: 'Market data', passed: true}); } 
+            if (state.currentMarket || state.demoMode) { score += 4; checks.push({name: 'Market data', passed: true}); } 
             else { checks.push({name: 'Market data', passed: false}); }
 
             if (state.orderbook?.bids?.[0]) { score += 4; checks.push({name: 'Orderbook', passed: true}); }
@@ -1710,25 +1747,44 @@
             try {
                 updateApiStatus('connecting', 'Updating...');
 
-                if (!state.currentMarket) {
-                    state.currentMarket = await getMarkets();
-                    if (state.currentMarket) {
-                        state.marketId = state.currentMarket.id;
+                let data;
+                
+                if (!state.demoMode) {
+                    try {
+                        if (!state.currentMarket) {
+                            state.currentMarket = await getMarkets();
+                            if (state.currentMarket) state.marketId = state.currentMarket.id;
+                        }
+                        
+                        if (state.currentMarket) {
+                            state.orderbook = await getOrderbook(state.currentMarket.id);
+                            state.lastSale = await getLastSale(state.currentMarket.id);
+                        }
+                    } catch (apiError) {
+                        console.error('API failed, switching to demo:', apiError);
+                        enableDemoMode();
                     }
                 }
+                
+                // DEMO MODE или fallback
+                if (state.demoMode || !state.orderbook) {
+                    if (!state.demoMode) enableDemoMode();
+                    const demo = generateDemoData();
+                    state.orderbook = demo.orderbook;
+                    state.currentMarket = demo.market;
+                }
 
-                if (!state.currentMarket) throw new Error('No market');
+                if (!state.currentMarket) throw new Error('No market data');
 
+                // Update UI
                 document.getElementById('marketId').textContent = state.currentMarket.id;
                 document.getElementById('marketStatusText').textContent = state.currentMarket.tradingStatus || 'OPEN';
                 document.getElementById('feeRate').textContent = (state.currentMarket.feeRateBps || 0) + ' bps';
                 document.getElementById('chartTitle').textContent = state.currentMarket.title || 'BTC Prediction';
 
-                state.orderbook = await getOrderbook(state.currentMarket.id);
                 renderOrderbook(state.orderbook);
                 updateOutcomes(state.orderbook);
 
-                state.lastSale = await getLastSale(state.currentMarket.id);
                 if (state.lastSale) {
                     document.getElementById('lastTradePrice').textContent = state.lastSale.price ? '$' + parseFloat(state.lastSale.price).toFixed(3) : '--';
                     document.getElementById('lastTradeSize').textContent = state.lastSale.size || '--';
@@ -1749,8 +1805,8 @@
                     document.getElementById('priceChange').style.color = signal.spreadPct < 3 ? 'var(--accent-green)' : 'var(--accent-yellow)';
                 }
 
-                updateApiStatus('connected', 'Live');
-                document.getElementById('marketStatus').className = 'status-indicator';
+                updateApiStatus(state.demoMode ? 'demo' : 'connected', state.demoMode ? 'DEMO MODE' : 'Live');
+                document.getElementById('marketStatus').className = state.demoMode ? 'status-indicator demo' : 'status-indicator';
 
             } catch (error) {
                 console.error('Update error:', error);
@@ -1771,7 +1827,12 @@
             state.apiKey = document.getElementById('apiKeyInput').value.trim() || DEFAULT_API_KEY;
             state.environment = document.getElementById('envSelect').value;
             state.updateInterval = parseInt(document.getElementById('intervalInput').value) || 3000;
+            state.demoMode = false;
             state.currentMarket = null;
+            state.orderbook = null;
+            
+            document.getElementById('demoBadge').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
 
             document.getElementById('settingsModal').classList.remove('active');
 
@@ -1809,7 +1870,6 @@
             setInterval(updateClock, 1000);
             setInterval(updateCountdown, 1000);
 
-            // Инициализация аудио по клику (требование браузеров)
             document.addEventListener('click', () => {
                 initAudio();
             }, { once: true });
