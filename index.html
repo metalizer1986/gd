@@ -33,7 +33,7 @@
         /* ── LAYOUT ── */
         .app {
             display: grid;
-            grid-template-columns: 270px 1fr 310px;
+            grid-template-columns: 280px 1fr 300px;
             grid-template-rows: 56px 1fr;
             height: 100vh;
             gap: 1px;
@@ -207,23 +207,36 @@
         }
         .sw.on::after { left: 20px; }
 
-        /* ── CONFLUENCE ── */
-        .conf-score { font-size: 32px; font-weight: 900; text-align: center; margin: 12px 0; }
+        /* ── CONFLUENCE (теперь в левой панели) ── */
+        .conf-score { font-size: 28px; font-weight: 900; text-align: center; margin: 8px 0; }
         .conf-score.hi { color: var(--green); }
         .conf-score.lo { color: var(--red); }
         .conf-score.mid { color: var(--yellow); }
         .ck { list-style: none; }
         .ck li {
             display: flex; align-items: center; gap: 7px;
-            padding: 4px 0; font-size: 11px; color: var(--text2);
+            padding: 4px 0; font-size: 10px; color: var(--text2);
         }
         .ck li.ok { color: var(--green); }
         .ck-dot {
             width: 14px; height: 14px; border-radius: 50%;
             background: var(--bg0); display: flex; align-items: center;
-            justify-content: center; font-size: 9px;
+            justify-content: center; font-size: 9px; flex-shrink: 0;
         }
         .ck li.ok .ck-dot { background: var(--green); color: #000; }
+
+        /* ── COMPACT CONFLUENCE CARD ── */
+        .conf-compact .conf-score {
+            font-size: 24px;
+            margin: 4px 0;
+        }
+        .conf-compact .prog {
+            margin: 8px 0;
+        }
+        .conf-compact .ck li {
+            font-size: 9px;
+            padding: 3px 0;
+        }
 
         /* ── COUNTDOWN ── */
         .cd-box {
@@ -312,7 +325,7 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 1200px) {
-            .app { grid-template-columns: 220px 1fr 260px; }
+            .app { grid-template-columns: 240px 1fr 260px; }
         }
         @media (max-width: 900px) {
             .app { grid-template-columns: 1fr; grid-template-rows: 56px auto; height: auto; }
@@ -366,7 +379,7 @@
         </div>
     </header>
 
-    <!-- LEFT SIDEBAR -->
+    <!-- LEFT SIDEBAR (теперь с Confluence внизу) -->
     <aside class="side-l">
 
         <!-- BTC Market -->
@@ -382,13 +395,13 @@
         <!-- Predict.Fun Market -->
         <div class="card">
             <div class="card-hdr"><span>Predict.Fun Market</span><div class="dot dot-y" id="dotPF"></div></div>
-            <div class="row"><span class="row-label">Market</span><span class="row-val" id="pfTitle" style="font-size:10px;max-width:140px;text-align:right;">--</span></div>
+            <div class="row"><span class="row-label">Market</span><span class="row-val" id="pfTitle" style="font-size:10px;max-width:160px;text-align:right;">--</span></div>
             <div class="row"><span class="row-label">Status</span><span class="row-val" id="pfStatus">--</span></div>
             <div class="row"><span class="row-label">Market ID</span><span class="row-val" id="pfId">--</span></div>
             <div class="row"><span class="row-label">Fee</span><span class="row-val" id="pfFee">--</span></div>
         </div>
 
-        <!-- Technicals -->
+        <!-- Technical Indicators -->
         <div class="card">
             <div class="card-hdr"><span>Technical Indicators</span></div>
             <div class="row"><span class="row-label">RSI(14)</span><span class="row-val" id="indRSI">--</span></div>
@@ -397,9 +410,17 @@
             <div class="row"><span class="row-label">Momentum</span><span class="row-val" id="indMom">--</span></div>
             <div class="row"><span class="row-label">Volatility</span><span class="row-val" id="indVol">--</span></div>
         </div>
+
+        <!-- CONFLUENCE (перемещён сюда) -->
+        <div class="card conf-compact">
+            <div class="card-hdr"><span>🔍 Confluence Check</span></div>
+            <div class="conf-score" id="confScore">--/7</div>
+            <div class="prog"><div class="prog-fill green" id="confBar" style="width:0;"></div></div>
+            <ul class="ck" id="ckList"></ul>
+        </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN CONTENT (без изменений) -->
     <main class="main">
         <div class="card">
             <div class="chart-hdr">
@@ -432,7 +453,7 @@
         </div>
     </main>
 
-    <!-- RIGHT SIDEBAR -->
+    <!-- RIGHT SIDEBAR (без Confluence) -->
     <aside class="side-r">
 
         <!-- Signal -->
@@ -488,12 +509,10 @@
             <div class="alert-row"><span>Test Sound</span><button class="hdr-btn" onclick="testBeep()">🔊 TEST</button></div>
         </div>
 
-        <!-- Confluence -->
+        <!-- Trade Log (был Confluence, теперь Trade Log) -->
         <div class="card">
-            <div class="card-hdr"><span>Confluence</span></div>
-            <div class="conf-score" id="confScore">--</div>
-            <div class="prog"><div class="prog-fill green" id="confBar" style="width:0;"></div></div>
-            <ul class="ck" id="ckList"></ul>
+            <div class="card-hdr"><span>📋 Trade Log</span><button onclick="clearHist()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:9px;font-family:inherit;">CLEAR</button></div>
+            <div class="hist" id="histBody" style="max-height: 150px; overflow-y: auto; font-size: 10px;"></div>
         </div>
 
         <!-- Countdown -->
@@ -506,7 +525,7 @@
     </aside>
 </div>
 
-<!-- Settings Modal -->
+<!-- Settings Modal (без изменений) -->
 <div class="modal-bg" id="modalBG">
     <div class="modal">
         <h2>⚙ Settings</h2>
@@ -562,6 +581,7 @@ const S = {
     pfConnected: false,
     lastSig: null,
     lastSigTime: 0,
+    trades: JSON.parse(localStorage.getItem('pf_trades') || '[]'),
     chartSample: 3
 };
 
@@ -830,8 +850,9 @@ function analyze() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER
+// RENDER FUNCTIONS
 // ═══════════════════════════════════════════════════════════
+
 function renderSignal(a) {
     const card = $('sigCard'), dir = $('sigDir'), sub = $('sigSub');
     const bar = $('sigBar'), edge = $('sigEdge'), risk = $('sigRisk');
@@ -1052,20 +1073,6 @@ function showToast(type, msg) {
     setTimeout(() => t.className = 'toast', 5000);
 }
 
-// ═══════════════════════════════════════════════════════════
-// TRADE LOG (оставил только лог, без quick trade UI)
-// ═══════════════════════════════════════════════════════════
-function renderHist() {
-    const c = $('histBody'); if (!c) return;
-    if (!S.trades.length) { c.innerHTML = '<div style="text-align:center;color:var(--text2);padding:8px;">No trades</div>'; return; }
-    c.innerHTML = S.trades.slice(0, 20).map(t =>
-        `<div class="hist-row"><span style="color:${t.type==='BUY'?'var(--green)':'var(--red)'}">${t.type} ${t.side} ${t.size} @ ${t.price}</span><span style="color:var(--text2)">${t.time}</span></div>`
-    ).join('');
-}
-
-function clearHist() {
-    if (confirm('Clear trade log?')) { S.trades = []; localStorage.removeItem('pf_trades'); renderHist(); }
-}
 
 // ═══════════════════════════════════════════════════════════
 // CLOCK & COUNTDOWN
@@ -1096,12 +1103,8 @@ function runAnalysis() {
     renderSignal(a);
     renderContext(a);
     renderConfluence(a);
-    renderDistance(a);   // 👈 distance panel update
+    renderDistance(a);
     updateCharts(a);
-
-    // Use real orderbook if available, otherwise simulate
-    const ob = S.pfOrderbook || simOB(a);
-    renderOB(ob);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1132,7 +1135,7 @@ function saveModal() {
     $('modalBG').classList.remove('open');
 
     // Reconnect API
-    S.pfMarket = null; S.pfConnected = false; S.pfOrderbook = null;
+    S.pfMarket = null; S.pfConnected = false;
     pfUpdate();
 
     // Restart analysis timer
@@ -1186,3 +1189,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(loadCandles, 60000);
 });
 </script>
+</body>
+</html>
