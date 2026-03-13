@@ -1008,4 +1008,21 @@ function updateCharts(a) {
 
     if (CH.main && S.priceHist.length > 1) {
         const samp = S.priceHist.filter((_, i) => i % S.chartSample === 0 || i === S.priceHist.length - 1);
-        CH.main.data.labels = samp.map(h => h.t
+        CH.main.data.labels = samp.map(h => h.t);
+        CH.main.data.datasets[0].data = samp.map(h => h.p);
+        CH.main.update('none');
+    }
+
+    if (CH.rsi && S.rsiHist.length > 0) {
+        CH.rsi.data.labels = S.rsiHist.map(h => h.t);
+        CH.rsi.data.datasets[0].data = S.rsiHist.map(h => h.v);
+        CH.rsi.update('none');
+    }
+
+    if (CH.conf && S.confHist.length > 0) {
+        CH.conf.data.labels = S.confHist.map(h => h.t);
+        CH.conf.data.datasets[0].data = S.confHist.map(h => h.v);
+        CH.conf.data.datasets[1].data = S.confHist.map(h => h.s);
+        CH.conf.update('none');
+    }
+}
