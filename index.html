@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predict.Fun — Personal BTC 15min Trading Terminal</title>
+    <title>Predict.Fun — Professional BTC Trading Terminal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,6 +22,10 @@
             --text: #e8eaf6;
             --text2: #7986cb;
             --border: #263055;
+            --critical: #ff0000;
+            --high: #ff6b6b;
+            --medium: #ffd93d;
+            --low: #00e676;
         }
         body {
             font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
@@ -33,7 +37,7 @@
         /* ── LAYOUT ── */
         .app {
             display: grid;
-            grid-template-columns: 280px 1fr 300px;
+            grid-template-columns: 320px 1fr 320px;
             grid-template-rows: 56px 1fr;
             height: 100vh;
             gap: 1px;
@@ -106,6 +110,17 @@
         .badge-ws { top: 64px; left: 16px; }
         .badge-ws.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
         .badge-ws.err { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+        .badge-risk {
+            top: 64px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg2);
+            border: 1px solid var(--yellow);
+            color: var(--yellow);
+        }
+        .badge-risk.critical { border-color: var(--critical); color: var(--critical); }
+        .badge-risk.high { border-color: var(--high); color: var(--high); }
+        .badge-risk.medium { border-color: var(--medium); color: var(--medium); }
+        .badge-risk.low { border-color: var(--low); color: var(--low); }
 
         /* ── PANELS ── */
         .side-l, .side-r {
@@ -147,6 +162,81 @@
         .row:last-child { border-bottom: none; }
         .row-label { font-size: 11px; color: var(--text2); }
         .row-val { font-size: 13px; font-weight: 700; }
+
+        /* Risk Management Styles */
+        .risk-level {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .risk-level.critical { background: var(--critical); color: #000; }
+        .risk-level.high { background: var(--high); color: #000; }
+        .risk-level.medium { background: var(--medium); color: #000; }
+        .risk-level.low { background: var(--low); color: #000; }
+
+        /* Key Levels Styles */
+        .level-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .level-row.support { background: rgba(0,230,118,0.1); border-left: 3px solid var(--green); }
+        .level-row.resistance { background: rgba(255,23,68,0.1); border-left: 3px solid var(--red); }
+        .level-row.pivot { background: rgba(255,171,0,0.1); border-left: 3px solid var(--yellow); }
+        .level-price { font-weight: 700; font-family: 'Courier New', monospace; }
+        .level-strength { font-size: 9px; color: var(--text2); }
+
+        /* Timeframe Signal Styles */
+        .tf-signal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .tf-signal-item {
+            background: var(--bg0);
+            border-radius: 4px;
+            padding: 6px;
+            text-align: center;
+        }
+        .tf-name { font-size: 9px; color: var(--text2); }
+        .tf-value {
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .tf-value.bull { color: var(--green); }
+        .tf-value.bear { color: var(--red); }
+
+        /* Volume Profile Styles */
+        .vol-profile {
+            margin-top: 8px;
+        }
+        .vol-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 2px 0;
+        }
+        .vol-price { font-size: 10px; width: 60px; }
+        .vol-fill {
+            height: 16px;
+            background: linear-gradient(90deg, var(--blue), var(--cyan));
+            border-radius: 2px;
+        }
+        .vol-poc {
+            border: 1px dashed var(--yellow);
+            padding: 2px 4px;
+            margin-top: 4px;
+            font-size: 9px;
+            text-align: center;
+        }
 
         /* ── CHART ── */
         .chart-box { position: relative; }
@@ -263,6 +353,30 @@
         .ctx-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; }
         .ctx-val { font-size: 15px; font-weight: 800; margin-top: 3px; }
 
+        /* ── TRADE STATS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .stat-item {
+            background: var(--bg0);
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 8px;
+            color: var(--text2);
+            text-transform: uppercase;
+        }
+        .stat-value {
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
         /* ── MODAL ── */
         .modal-bg {
             display: none; position: fixed; inset: 0;
@@ -273,6 +387,8 @@
         .modal {
             background: var(--bg1); border: 1px solid var(--border);
             border-radius: 14px; padding: 24px; width: 92%; max-width: 460px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .modal h2 { font-size: 16px; margin-bottom: 18px; }
         .fg { margin-bottom: 14px; }
@@ -287,6 +403,16 @@
             padding: 11px; border-radius: 7px; font-weight: 700;
             cursor: pointer; font-family: inherit; font-size: 13px;
             margin-top: 6px;
+        }
+        .modal-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-section h3 {
+            font-size: 13px;
+            margin-bottom: 12px;
+            color: var(--text);
         }
 
         /* ── TOAST ── */
@@ -325,7 +451,7 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 1200px) {
-            .app { grid-template-columns: 240px 1fr 260px; }
+            .app { grid-template-columns: 280px 1fr 280px; }
         }
         @media (max-width: 900px) {
             .app { grid-template-columns: 1fr; grid-template-rows: 56px auto; height: auto; }
@@ -338,6 +464,7 @@
 <!-- Status badges -->
 <div class="badge badge-ws err" id="badgeWS">⏳ Binance WS...</div>
 <div class="badge badge-api wait" id="badgeAPI">⏳ Predict.fun API...</div>
+<div class="badge badge-risk" id="badgeRisk">⚡ Risk: LOW</div>
 
 <!-- Alert overlay -->
 <div class="alert-bg" id="alertBG">
@@ -361,7 +488,7 @@
     <header class="hdr">
         <div class="hdr-left">
             <div class="logo-dot"></div>
-            <span class="hdr-title">Predict.Fun Terminal</span>
+            <span class="hdr-title">Predict.Fun Pro Terminal</span>
             <span class="hdr-tag"><span class="live-dot"></span> LIVE</span>
         </div>
         <div class="hdr-center">
@@ -379,7 +506,7 @@
         </div>
     </header>
 
-    <!-- LEFT SIDEBAR -->
+    <!-- LEFT SIDEBAR (Расширенная) -->
     <aside class="side-l">
 
         <!-- BTC Market -->
@@ -392,7 +519,66 @@
             <div class="row"><span class="row-label">24h Vol</span><span class="row-val" id="btcVol">--</span></div>
         </div>
 
-        <!-- Predict.Fun Market (автообновление каждые 5 минут) -->
+        <!-- Risk Management Dashboard -->
+        <div class="card">
+            <div class="card-hdr">
+                <span>🛡️ Risk Management</span>
+                <span class="risk-level" id="riskLevel">LOW</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Account Balance</span>
+                <span class="row-val" id="accBalance">$10,000</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Daily P&L</span>
+                <span class="row-val" id="dailyPL">$0</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Drawdown</span>
+                <span class="row-val" id="drawdown">0%</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Win Rate</span>
+                <span class="row-val" id="winRate">0%</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Profit Factor</span>
+                <span class="row-val" id="profitFactor">0</span>
+            </div>
+            <div class="row">
+                <span class="row-label">Recommended Size</span>
+                <span class="row-val" id="recSize">0</span>
+            </div>
+        </div>
+
+        <!-- Multi-Timeframe Analysis -->
+        <div class="card">
+            <div class="card-hdr"><span>⏱️ Multi-Timeframe</span></div>
+            <div class="tf-signal-grid" id="tfSignals">
+                <div class="tf-signal-item">
+                    <div class="tf-name">1m</div>
+                    <div class="tf-value" id="tf1m">--</div>
+                </div>
+                <div class="tf-signal-item">
+                    <div class="tf-name">5m</div>
+                    <div class="tf-value" id="tf5m">--</div>
+                </div>
+                <div class="tf-signal-item">
+                    <div class="tf-name">15m</div>
+                    <div class="tf-value" id="tf15m">--</div>
+                </div>
+                <div class="tf-signal-item">
+                    <div class="tf-name">1h</div>
+                    <div class="tf-value" id="tf1h">--</div>
+                </div>
+            </div>
+            <div class="row" style="margin-top:8px;">
+                <span class="row-label">Aggregate</span>
+                <span class="row-val" id="tfAggregate">WAIT</span>
+            </div>
+        </div>
+
+        <!-- Predict.Fun Market -->
         <div class="card" id="pfMarketCard">
             <div class="card-hdr">
                 <span>📊 Predict.Fun Market</span>
@@ -460,7 +646,7 @@
         </div>
     </main>
 
-    <!-- RIGHT SIDEBAR (без дублирования) -->
+    <!-- RIGHT SIDEBAR (Расширенная) -->
     <aside class="side-r">
 
         <!-- Signal -->
@@ -472,6 +658,22 @@
             <div class="sig-meta">
                 <span id="sigEdge" style="color:var(--green);">Edge: --</span>
                 <span id="sigRisk" style="color:var(--text2);">Risk: --</span>
+            </div>
+        </div>
+
+        <!-- Key Levels -->
+        <div class="card">
+            <div class="card-hdr"><span>🎯 Key Levels</span></div>
+            <div id="keyLevels">
+                <div style="text-align:center; color:var(--text2); padding:8px;">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Volume Profile -->
+        <div class="card">
+            <div class="card-hdr"><span>📊 Volume Profile</span></div>
+            <div id="volumeProfile">
+                <div style="text-align:center; color:var(--text2); padding:8px;">Loading...</div>
             </div>
         </div>
 
@@ -509,6 +711,37 @@
             <div class="alert-row"><span>Test Sound</span><button class="hdr-btn" onclick="testBeep()">🔊 TEST</button></div>
         </div>
 
+        <!-- Trade Stats -->
+        <div class="card">
+            <div class="card-hdr"><span>📈 Trade Statistics</span></div>
+            <div class="stats-grid" id="tradeStats">
+                <div class="stat-item">
+                    <div class="stat-label">Total Trades</div>
+                    <div class="stat-value" id="statTotal">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-value" id="statWinRate">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Win</div>
+                    <div class="stat-value" id="statAvgWin">$0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Loss</div>
+                    <div class="stat-value" id="statAvgLoss">$0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Profit Factor</div>
+                    <div class="stat-value" id="statProfitFactor">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Sharpe</div>
+                    <div class="stat-value" id="statSharpe">0</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Countdown -->
         <div class="cd-box" id="cdBox">
             <div class="card-hdr" style="justify-content:center;color:var(--green);"><span>⏱ 15-MIN CYCLE</span></div>
@@ -519,33 +752,66 @@
     </aside>
 </div>
 
-<!-- Settings Modal -->
+<!-- Settings Modal (Расширенный) -->
 <div class="modal-bg" id="modalBG">
     <div class="modal">
-        <h2>⚙ Settings</h2>
-        <div class="fg">
-            <label>Predict.fun API Key</label>
-            <input type="password" id="inKey">
+        <h2>⚙ Professional Settings</h2>
+        
+        <div class="modal-section">
+            <h3>🔑 API Configuration</h3>
+            <div class="fg">
+                <label>Predict.fun API Key</label>
+                <input type="password" id="inKey">
+            </div>
+            <div class="fg">
+                <label>Telegram Bot Token</label>
+                <input type="text" id="inTGToken" placeholder="123456:ABC-DEF...">
+            </div>
+            <div class="fg">
+                <label>Telegram Chat ID</label>
+                <input type="text" id="inTGChat" placeholder="143405349">
+            </div>
         </div>
-        <div class="fg">
-            <label>Telegram Bot Token</label>
-            <input type="text" id="inTGToken" placeholder="123456:ABC-DEF...">
+
+        <div class="modal-section">
+            <h3>📊 Signal Settings</h3>
+            <div class="fg">
+                <label>Signal Threshold (%)</label>
+                <input type="number" id="inThresh" value="65" min="50" max="95">
+            </div>
+            <div class="fg">
+                <label>Analysis Interval (ms)</label>
+                <input type="number" id="inInterval" value="2000" min="500" max="30000">
+            </div>
         </div>
-        <div class="fg">
-            <label>Telegram Chat ID</label>
-            <input type="text" id="inTGChat" placeholder="143405349">
+
+        <div class="modal-section">
+            <h3>🛡️ Risk Management</h3>
+            <div class="fg">
+                <label>Account Balance ($)</label>
+                <input type="number" id="inBalance" value="10000" min="1000" step="1000">
+            </div>
+            <div class="fg">
+                <label>Max Position Size ($)</label>
+                <input type="number" id="inMaxSize" value="1000" min="100" step="100">
+            </div>
+            <div class="fg">
+                <label>Max Daily Loss ($)</label>
+                <input type="number" id="inDailyLoss" value="500" min="100" step="50">
+            </div>
+            <div class="fg">
+                <label>Risk Per Trade (%)</label>
+                <input type="number" id="inRiskPerTrade" value="2" min="0.5" max="5" step="0.5">
+            </div>
+            <div class="fg">
+                <label>Min Confidence (%)</label>
+                <input type="number" id="inMinConf" value="70" min="50" max="90">
+            </div>
         </div>
-        <div class="fg">
-            <label>Signal Threshold (%)</label>
-            <input type="number" id="inThresh" value="65" min="50" max="95">
-        </div>
-        <div class="fg">
-            <label>Analysis Interval (ms)</label>
-            <input type="number" id="inInterval" value="2000" min="500" max="30000">
-        </div>
-        <button class="modal-btn" onclick="saveModal()">💾 Save & Apply</button>
+
+        <button class="modal-btn" onclick="saveModal()">💾 Save All Settings</button>
         <p style="margin-top:12px;font-size:10px;color:var(--text2);text-align:center;">
-            ⚠ API key is stored in localStorage on this device only.
+            ⚠ All data stored locally in browser
         </p>
     </div>
 </div>
@@ -586,6 +852,578 @@ let wsRef = null;
 let analysisTimer = null;
 let pfTimer = null;
 let pfUpdateTimer = null;
+
+// ═══════════════════════════════════════════════════════════
+// RISK MANAGEMENT MODULE
+// ═══════════════════════════════════════════════════════════
+const RiskManager = {
+    config: {
+        maxPositionSize: 1000,
+        maxDailyLoss: 500,
+        maxDrawdown: 0.2,
+        riskPerTrade: 0.02,
+        accountBalance: 10000,
+        useDynamicSizing: true,
+        minConfidenceForTrade: 70,
+        maxVolatilityForTrade: 0.25
+    },
+    
+    tradeHistory: [],
+    dailyPL: 0,
+    currentDrawdown: 0,
+    peakBalance: 10000,
+    
+    init() {
+        const saved = localStorage.getItem('risk_config');
+        if (saved) {
+            try {
+                this.config = { ...this.config, ...JSON.parse(saved) };
+            } catch (e) {}
+        }
+        this.peakBalance = this.config.accountBalance;
+        this.loadHistory();
+        this.updateUI();
+    },
+    
+    loadHistory() {
+        try {
+            const saved = localStorage.getItem('trade_history');
+            if (saved) {
+                this.tradeHistory = JSON.parse(saved);
+            }
+        } catch (e) {}
+    },
+    
+    saveConfig() {
+        localStorage.setItem('risk_config', JSON.stringify(this.config));
+    },
+    
+    calculatePositionSize(price, confidence, volatility, signal) {
+        if (!this.config.useDynamicSizing) return 100;
+        
+        let size = this.config.maxPositionSize;
+        
+        if (confidence < this.config.minConfidenceForTrade) {
+            return 0;
+        } else if (confidence < 75) {
+            size *= 0.5;
+        } else if (confidence < 85) {
+            size *= 0.75;
+        }
+        
+        if (volatility > this.config.maxVolatilityForTrade) {
+            return 0;
+        } else if (volatility > 0.2) {
+            size *= 0.6;
+        } else if (volatility > 0.15) {
+            size *= 0.8;
+        }
+        
+        const edge = Math.abs(confidence - 50) / 100;
+        const kellyPercent = edge / 2;
+        const kellySize = this.config.accountBalance * kellyPercent;
+        size = Math.min(size, kellySize);
+        
+        if (this.checkDailyLoss()) {
+            size *= 0.5;
+        }
+        
+        if (this.currentDrawdown > this.config.maxDrawdown * 0.7) {
+            size *= 0.3;
+        } else if (this.currentDrawdown > this.config.maxDrawdown * 0.5) {
+            size *= 0.6;
+        }
+        
+        return Math.max(0, Math.floor(size));
+    },
+    
+    checkDailyLoss() {
+        const today = new Date().toDateString();
+        const todayTrades = this.tradeHistory.filter(t => 
+            new Date(t.timestamp).toDateString() === today
+        );
+        
+        this.dailyPL = todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        return this.dailyPL < -this.config.maxDailyLoss;
+    },
+    
+    updateDrawdown(currentBalance) {
+        if (currentBalance > this.peakBalance) {
+            this.peakBalance = currentBalance;
+        }
+        this.currentDrawdown = (this.peakBalance - currentBalance) / this.peakBalance;
+        return this.currentDrawdown;
+    },
+    
+    recordTrade(trade) {
+        this.tradeHistory.push({
+            ...trade,
+            timestamp: Date.now(),
+            drawdown: this.currentDrawdown
+        });
+        
+        this.config.accountBalance += trade.pnl || 0;
+        this.updateDrawdown(this.config.accountBalance);
+        
+        if (this.tradeHistory.length > 100) {
+            this.tradeHistory = this.tradeHistory.slice(-100);
+        }
+        
+        localStorage.setItem('trade_history', JSON.stringify(this.tradeHistory));
+        this.updateUI();
+    },
+    
+    getStats() {
+        const trades = this.tradeHistory;
+        const wins = trades.filter(t => (t.pnl || 0) > 0);
+        const losses = trades.filter(t => (t.pnl || 0) < 0);
+        
+        const totalWin = wins.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const totalLoss = Math.abs(losses.reduce((sum, t) => sum + (t.pnl || 0), 0));
+        
+        // Simple Sharpe ratio calculation
+        const returns = trades.map(t => t.pnl || 0);
+        const avgReturn = returns.length ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
+        const stdDev = Math.sqrt(returns.length ? returns.map(r => Math.pow(r - avgReturn, 2)).reduce((a, b) => a + b, 0) / returns.length : 0);
+        const sharpe = stdDev ? (avgReturn / stdDev) * Math.sqrt(252) : 0;
+        
+        return {
+            winRate: trades.length ? (wins.length / trades.length * 100).toFixed(1) : '0',
+            profitFactor: totalLoss ? (totalWin / totalLoss).toFixed(2) : '∞',
+            totalTrades: trades.length,
+            avgWin: wins.length ? (totalWin / wins.length).toFixed(2) : '0',
+            avgLoss: losses.length ? (totalLoss / losses.length).toFixed(2) : '0',
+            currentDrawdown: (this.currentDrawdown * 100).toFixed(1),
+            dailyPL: this.dailyPL.toFixed(2),
+            accountBalance: this.config.accountBalance.toFixed(2),
+            sharpe: sharpe.toFixed(2)
+        };
+    },
+    
+    getRiskLevel() {
+        if (this.currentDrawdown > this.config.maxDrawdown * 0.8) return 'CRITICAL';
+        if (this.currentDrawdown > this.config.maxDrawdown * 0.5) return 'HIGH';
+        if (this.currentDrawdown > this.config.maxDrawdown * 0.2) return 'MEDIUM';
+        if (this.checkDailyLoss()) return 'CAUTION';
+        return 'LOW';
+    },
+    
+    updateUI() {
+        const stats = this.getStats();
+        const riskLevel = this.getRiskLevel();
+        
+        const riskBadge = $('#badgeRisk');
+        if (riskBadge) {
+            riskBadge.className = `badge badge-risk ${riskLevel.toLowerCase()}`;
+            riskBadge.textContent = `⚡ Risk: ${riskLevel}`;
+        }
+        
+        const riskLevelEl = $('#riskLevel');
+        if (riskLevelEl) {
+            riskLevelEl.className = `risk-level ${riskLevel.toLowerCase()}`;
+            riskLevelEl.textContent = riskLevel;
+        }
+        
+        txt('accBalance', '$' + stats.accountBalance);
+        txt('dailyPL', (stats.dailyPL >= 0 ? '+' : '') + '$' + stats.dailyPL);
+        txt('drawdown', stats.currentDrawdown + '%');
+        txt('winRate', stats.winRate + '%');
+        txt('profitFactor', stats.profitFactor);
+        txt('statTotal', stats.totalTrades);
+        txt('statWinRate', stats.winRate + '%');
+        txt('statAvgWin', '$' + stats.avgWin);
+        txt('statAvgLoss', '$' + stats.avgLoss);
+        txt('statProfitFactor', stats.profitFactor);
+        txt('statSharpe', stats.sharpe);
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// MULTI-TIMEFRAME ANALYSIS MODULE
+// ═══════════════════════════════════════════════════════════
+const TimeframeAnalysis = {
+    timeframes: ['1m', '5m', '15m', '1h'],
+    signals: {},
+    candles: {},
+    
+    async loadAllTimeframes() {
+        try {
+            this.candles['1m'] = S.candles;
+            this.candles['5m'] = this.aggregateCandles(S.candles, 5);
+            this.candles['15m'] = this.aggregateCandles(S.candles, 15);
+            this.candles['1h'] = this.aggregateCandles(S.candles, 60);
+            return true;
+        } catch (e) {
+            console.error('Timeframe loading failed:', e);
+            return false;
+        }
+    },
+    
+    aggregateCandles(minCandles, targetMinutes) {
+        const result = [];
+        const candlesPerTarget = targetMinutes;
+        
+        for (let i = 0; i < minCandles.length; i += candlesPerTarget) {
+            const chunk = minCandles.slice(i, i + candlesPerTarget);
+            if (chunk.length === 0) continue;
+            
+            const first = chunk[0];
+            const last = chunk[chunk.length - 1];
+            
+            result.push({
+                time: first.time,
+                o: first.o,
+                h: Math.max(...chunk.map(c => c.h)),
+                l: Math.min(...chunk.map(c => c.l)),
+                c: last.c,
+                v: chunk.reduce((sum, c) => sum + c.v, 0)
+            });
+        }
+        
+        return result;
+    },
+    
+    analyzeTimeframe(candles, tf) {
+        if (!candles || candles.length < 30) return null;
+        
+        const closes = candles.map(c => c.c);
+        const rsi = this.calculateRSI(closes);
+        const ema9 = this.calculateEMA(closes, 9);
+        const ema21 = this.calculateEMA(closes, 21);
+        const macd = this.calculateMACD(closes);
+        const momentum = this.calculateMomentum(closes);
+        
+        let signal = 'NEUTRAL';
+        if (rsi > 55 && ema9 > ema21) signal = 'BULLISH';
+        if (rsi < 45 && ema9 < ema21) signal = 'BEARISH';
+        
+        return { signal, rsi, ema9, ema21, macd, momentum };
+    },
+    
+    calculateRSI(closes, p = 14) {
+        if (closes.length < p + 1) return 50;
+        let g = 0, l = 0;
+        for (let i = closes.length - p; i < closes.length; i++) {
+            const d = closes[i] - closes[i-1];
+            if (d > 0) g += d; else l -= d;
+        }
+        if (l === 0) return 100;
+        return 100 - 100 / (1 + (g/p) / (l/p));
+    },
+    
+    calculateEMA(closes, p) {
+        if (closes.length < p) return closes[closes.length - 1];
+        const k = 2 / (p + 1);
+        let ema = closes.slice(0, p).reduce((a, b) => a + b, 0) / p;
+        for (let i = p; i < closes.length; i++) {
+            ema = closes[i] * k + ema * (1 - k);
+        }
+        return ema;
+    },
+    
+    calculateMACD(closes) {
+        if (closes.length < 26) return { line: 0, signal: 0, hist: 0 };
+        const ema12 = this.calculateEMA(closes, 12);
+        const ema26 = this.calculateEMA(closes, 26);
+        const macdLine = ema12 - ema26;
+        const signalLine = macdLine * 0.8;
+        return { line: macdLine, signal: signalLine, hist: macdLine - signalLine };
+    },
+    
+    calculateMomentum(closes) {
+        if (closes.length < 6) return 0;
+        return ((closes[closes.length-1] / closes[closes.length-6]) - 1) * 100;
+    },
+    
+    async updateSignals() {
+        await this.loadAllTimeframes();
+        
+        for (const [tf, candles] of Object.entries(this.candles)) {
+            this.signals[tf] = this.analyzeTimeframe(candles, tf);
+        }
+        
+        this.updateUI();
+        return this.getAggregateSignal();
+    },
+    
+    getAggregateSignal() {
+        const weights = { '1m': 1, '5m': 2, '15m': 3, '1h': 4 };
+        let buyWeight = 0, sellWeight = 0, totalWeight = 0;
+        
+        for (const [tf, signal] of Object.entries(this.signals)) {
+            if (!signal) continue;
+            const weight = weights[tf] || 1;
+            if (signal.signal === 'BULLISH') buyWeight += weight;
+            if (signal.signal === 'BEARISH') sellWeight += weight;
+            totalWeight += weight;
+        }
+        
+        if (totalWeight === 0) return { signal: 'WAIT', confidence: 50 };
+        
+        const buyStrength = (buyWeight / totalWeight) * 100;
+        const sellStrength = (sellWeight / totalWeight) * 100;
+        
+        let signal = 'WAIT';
+        let confidence = 50;
+        
+        if (buyStrength > 60 && buyStrength > sellStrength * 1.5) {
+            signal = 'BUY';
+            confidence = Math.min(95, 50 + buyStrength / 2);
+        } else if (sellStrength > 60 && sellStrength > buyStrength * 1.5) {
+            signal = 'SELL';
+            confidence = Math.min(95, 50 + sellStrength / 2);
+        }
+        
+        return { signal, confidence, buyStrength, sellStrength };
+    },
+    
+    updateUI() {
+        const tfMap = { '1m': 'tf1m', '5m': 'tf5m', '15m': 'tf15m', '1h': 'tf1h' };
+        
+        for (const [tf, id] of Object.entries(tfMap)) {
+            const signal = this.signals[tf];
+            const el = $(id);
+            if (el && signal) {
+                el.textContent = signal.signal;
+                el.className = 'tf-value ' + (signal.signal === 'BULLISH' ? 'bull' : signal.signal === 'BEARISH' ? 'bear' : '');
+            }
+        }
+        
+        const agg = this.getAggregateSignal();
+        const aggEl = $('#tfAggregate');
+        if (aggEl) {
+            aggEl.textContent = agg.signal;
+            aggEl.style.color = agg.signal === 'BUY' ? 'var(--green)' : agg.signal === 'SELL' ? 'var(--red)' : 'var(--text2)';
+        }
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// KEY LEVELS MODULE
+// ═══════════════════════════════════════════════════════════
+const KeyLevels = {
+    levels: [],
+    
+    calculateLevels(candles) {
+        if (!candles || candles.length < 50) return [];
+        
+        const highs = candles.map(c => c.h);
+        const lows = candles.map(c => c.l);
+        const closes = candles.map(c => c.c);
+        const currentPrice = S.btc.price;
+        
+        const pivot = (highs[highs.length-1] + lows[lows.length-1] + closes[closes.length-1]) / 3;
+        const r1 = 2 * pivot - lows[lows.length-1];
+        const s1 = 2 * pivot - highs[highs.length-1];
+        const r2 = pivot + (highs[highs.length-1] - lows[lows.length-1]);
+        const s2 = pivot - (highs[highs.length-1] - lows[lows.length-1]);
+        
+        const priceLevels = [];
+        
+        for (let i = 1; i < highs.length - 1; i++) {
+            if (highs[i] > highs[i-1] && highs[i] > highs[i+1]) {
+                priceLevels.push({ price: highs[i], type: 'resistance', strength: 'medium' });
+            }
+            if (lows[i] < lows[i-1] && lows[i] < lows[i+1]) {
+                priceLevels.push({ price: lows[i], type: 'support', strength: 'medium' });
+            }
+        }
+        
+        const groupedLevels = this.clusterLevels(priceLevels);
+        
+        groupedLevels.push(
+            { price: pivot, type: 'pivot', strength: 'strong' },
+            { price: r1, type: 'resistance', strength: 'medium' },
+            { price: s1, type: 'support', strength: 'medium' },
+            { price: r2, type: 'resistance', strength: 'weak' },
+            { price: s2, type: 'support', strength: 'weak' }
+        );
+        
+        groupedLevels.sort((a, b) => a.price - b.price);
+        this.levels = groupedLevels;
+        this.updateUI(currentPrice);
+        return groupedLevels;
+    },
+    
+    clusterLevels(levels, tolerance = 0.001) {
+        const clustered = [];
+        const used = new Set();
+        
+        for (let i = 0; i < levels.length; i++) {
+            if (used.has(i)) continue;
+            
+            const cluster = [levels[i]];
+            used.add(i);
+            
+            for (let j = i + 1; j < levels.length; j++) {
+                if (used.has(j)) continue;
+                
+                const priceDiff = Math.abs(levels[i].price - levels[j].price) / levels[i].price;
+                if (priceDiff < tolerance) {
+                    cluster.push(levels[j]);
+                    used.add(j);
+                }
+            }
+            
+            const avgPrice = cluster.reduce((sum, l) => sum + l.price, 0) / cluster.length;
+            
+            const typeCount = { support: 0, resistance: 0, pivot: 0 };
+            cluster.forEach(l => typeCount[l.type]++);
+            
+            let type = 'support';
+            if (typeCount.resistance > typeCount.support) type = 'resistance';
+            if (typeCount.pivot > 0) type = 'pivot';
+            
+            const strength = cluster.length > 3 ? 'strong' : cluster.length > 1 ? 'medium' : 'weak';
+            
+            clustered.push({ price: avgPrice, type, strength, touches: cluster.length });
+        }
+        
+        return clustered;
+    },
+    
+    updateUI(currentPrice) {
+        const container = $('#keyLevels');
+        if (!container) return;
+        
+        const above = this.levels.filter(l => l.price > currentPrice).slice(0, 3);
+        const below = this.levels.filter(l => l.price < currentPrice).slice(-3).reverse();
+        
+        let html = '';
+        
+        [...above, ...below].sort((a, b) => a.price - b.price).forEach(level => {
+            const distance = ((level.price - currentPrice) / currentPrice * 100).toFixed(2);
+            const sign = distance > 0 ? '+' : '';
+            
+            html += `
+                <div class="level-row ${level.type}">
+                    <span class="level-price">$${level.price.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
+                    <span>
+                        <span style="color:${distance > 0 ? 'var(--green)' : 'var(--red)'}">${sign}${distance}%</span>
+                        <span class="level-strength">${level.strength}</span>
+                    </span>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html || '<div style="text-align:center; color:var(--text2);">No levels</div>';
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// VOLUME PROFILE MODULE
+// ═══════════════════════════════════════════════════════════
+const VolumeProfile = {
+    profile: {},
+    poc: 0,
+    vah: 0,
+    val: 0,
+    
+    calculate(candles, numBins = 10) {
+        if (!candles || candles.length < 20) return;
+        
+        const prices = candles.map(c => [c.l, c.h]).flat();
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const binSize = (maxPrice - minPrice) / numBins;
+        
+        const profile = {};
+        for (let i = 0; i < numBins; i++) {
+            const lower = minPrice + i * binSize;
+            const upper = lower + binSize;
+            profile[`${lower.toFixed(0)}-${upper.toFixed(0)}`] = 0;
+        }
+        
+        candles.forEach(candle => {
+            const price = (candle.l + candle.h) / 2;
+            for (let i = 0; i < numBins; i++) {
+                const lower = minPrice + i * binSize;
+                const upper = lower + binSize;
+                if (price >= lower && price <= upper) {
+                    const key = `${lower.toFixed(0)}-${upper.toFixed(0)}`;
+                    profile[key] += candle.v;
+                    break;
+                }
+            }
+        });
+        
+        this.profile = profile;
+        
+        // Find Point of Control
+        let maxVol = 0;
+        let pocKey = '';
+        Object.entries(profile).forEach(([key, vol]) => {
+            if (vol > maxVol) {
+                maxVol = vol;
+                pocKey = key;
+            }
+        });
+        
+        if (pocKey) {
+            const [low, high] = pocKey.split('-').map(Number);
+            this.poc = (low + high) / 2;
+        }
+        
+        // Calculate Value Area (70% of volume)
+        const totalVol = Object.values(profile).reduce((a, b) => a + b, 0);
+        const targetVol = totalVol * 0.7;
+        let cumVol = 0;
+        const sorted = Object.entries(profile).sort((a, b) => {
+            const [aLow] = a[0].split('-').map(Number);
+            const [bLow] = b[0].split('-').map(Number);
+            return aLow - bLow;
+        });
+        
+        for (const [key, vol] of sorted) {
+            cumVol += vol;
+            if (cumVol >= targetVol) {
+                const [low, high] = key.split('-').map(Number);
+                this.vah = high;
+                break;
+            }
+        }
+        
+        cumVol = 0;
+        for (let i = sorted.length - 1; i >= 0; i--) {
+            const [key, vol] = sorted[i];
+            cumVol += vol;
+            if (cumVol >= targetVol) {
+                const [low, high] = key.split('-').map(Number);
+                this.val = low;
+                break;
+            }
+        }
+        
+        this.updateUI();
+    },
+    
+    updateUI() {
+        const container = $('#volumeProfile');
+        if (!container) return;
+        
+        const totalVol = Object.values(this.profile).reduce((a, b) => a + b, 0);
+        const maxVol = Math.max(...Object.values(this.profile));
+        
+        let html = '<div class="vol-profile">';
+        
+        Object.entries(this.profile).forEach(([key, vol]) => {
+            const width = (vol / maxVol * 100).toFixed(0);
+            html += `
+                <div class="vol-bar">
+                    <span class="vol-price">${key}</span>
+                    <div class="vol-fill" style="width: ${width}%;"></div>
+                    <span style="font-size:9px;">${(vol/1000).toFixed(0)}K</span>
+                </div>
+            `;
+        });
+        
+        html += `<div class="vol-poc">🎯 POC: $${this.poc.toLocaleString(undefined, {maximumFractionDigits:0})}</div>`;
+        html += `<div class="vol-poc">📊 Value Area: $${this.val.toFixed(0)} - $${this.vah.toFixed(0)}</div>`;
+        html += '</div>';
+        
+        container.innerHTML = html;
+    }
+};
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
@@ -669,12 +1507,10 @@ function onTick() {
     const p = S.btc.price;
     if (!p) return;
 
-    // header
     txt('hdrPrice', '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
     const hc = $('hdrChange');
     if (hc) { hc.textContent = (S.btc.ch >= 0 ? '+' : '') + S.btc.ch.toFixed(2) + '%'; hc.style.color = S.btc.ch >= 0 ? 'var(--green)' : 'var(--red)'; }
 
-    // left panel
     txt('btcP', '$' + p.toLocaleString('en-US', {maximumFractionDigits:0}));
     const bc = $('btcCh');
     if (bc) { bc.textContent = (S.btc.ch >= 0 ? '+' : '') + S.btc.ch.toFixed(2) + '%'; bc.style.color = S.btc.ch >= 0 ? 'var(--green)' : 'var(--red)'; }
@@ -682,12 +1518,10 @@ function onTick() {
     txt('btcLo', '$' + S.btc.lo.toLocaleString('en-US', {maximumFractionDigits:0}));
     txt('btcVol', fmt(S.btc.vol, 0) + ' BTC');
 
-    // price history
     const t = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
     S.priceHist.push({t, p});
     if (S.priceHist.length > 600) S.priceHist.shift();
 
-    // update current candle
     if (S.candles.length) {
         const last = S.candles[S.candles.length - 1];
         const nowMin = Math.floor(Date.now() / 60000) * 60000;
@@ -708,11 +1542,16 @@ async function loadCandles() {
         const r = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=120');
         const d = await r.json();
         S.candles = d.map(k => ({time: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4], v: +k[5]}));
+        
+        // Update modules with new candle data
+        KeyLevels.calculateLevels(S.candles);
+        VolumeProfile.calculate(S.candles);
+        TimeframeAnalysis.updateSignals();
     } catch (e) { console.error('Candle load failed:', e); }
 }
 
 // ═══════════════════════════════════════════════════════════
-// PREDICT.FUN API (с автообновлением каждые 5 минут)
+// PREDICT.FUN API
 // ═══════════════════════════════════════════════════════════
 async function pfFetch(endpoint) {
     const r = await fetch(PF_BASE + endpoint, {
@@ -743,7 +1582,6 @@ async function pfLoadMarket() {
             S.pfConnected = true;
             S.pfLastUpdate = new Date();
 
-            // Обновляем только левую панель (дублирование убрано)
             txt('pfTitle', S.pfMarket.title || S.pfMarket.question || '--');
             txt('pfStatus', S.pfMarket.tradingStatus || 'OPEN');
             txt('pfId', S.pfMarket.id || '--');
@@ -765,7 +1603,6 @@ async function pfLoadMarket() {
         $('badgeAPI').className = 'badge badge-api err';
         txt('badgeAPI', '✖ API: ' + e.message);
         
-        // Очищаем данные при ошибке
         txt('pfTitle', '--');
         txt('pfStatus', '--');
         txt('pfId', '--');
@@ -779,13 +1616,12 @@ async function pfUpdate() {
     await pfLoadMarket();
 }
 
-// Запуск автообновления каждые 5 минут (300000 мс)
 function startPfAutoUpdate() {
     if (pfUpdateTimer) clearInterval(pfUpdateTimer);
     pfUpdateTimer = setInterval(async () => {
         console.log('🔄 Auto-updating Predict.Fun market data...');
         await pfUpdate();
-    }, 300000); // 5 минут
+    }, 300000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -842,7 +1678,6 @@ function analyze() {
     const avg = rets.reduce((a,b) => a+b, 0) / rets.length;
     const vol = Math.sqrt(rets.reduce((a,r2) => a + (r2-avg)**2, 0) / rets.length);
 
-    // scoring
     let bull = 0, bear = 0;
     if (r > 55) bull += 2; if (r > 65) bull += 1;
     if (r < 45) bear += 2; if (r < 35) bear += 1;
@@ -876,15 +1711,23 @@ function renderSignal(a) {
         card.className = 'sig-card buy'; txt('sigDir', '▲ BUY'); txt('sigSub', `${a.conf}% — Buy YES (price UP)`);
         bar.className = 'prog-fill green';
         if (edge) { edge.textContent = `Edge: +${(a.conf-50)}%`; edge.style.color = 'var(--green)'; }
+        
+        // Calculate recommended position size
+        const recSize = RiskManager.calculatePositionSize(S.btc.price, a.conf, a.vol, 'BUY');
+        txt('recSize', recSize);
     } else if (a.sig === 'SELL' && strong) {
         card.className = 'sig-card sell'; txt('sigDir', '▼ SELL'); txt('sigSub', `${a.conf}% — Buy NO (price DOWN)`);
         bar.className = 'prog-fill red';
         if (edge) { edge.textContent = `Edge: +${(a.conf-50)}%`; edge.style.color = 'var(--red)'; }
+        
+        const recSize = RiskManager.calculatePositionSize(S.btc.price, a.conf, a.vol, 'SELL');
+        txt('recSize', recSize);
     } else {
         card.className = 'sig-card'; txt('sigDir', '● WAIT');
         txt('sigSub', `Conf ${a.conf}% < thresh ${S.threshold}%`);
         bar.className = 'prog-fill green';
         if (edge) { edge.textContent = 'Edge: --'; edge.style.color = 'var(--text2)'; }
+        txt('recSize', '0');
     }
     if (bar) bar.style.width = a.conf + '%';
 
@@ -894,7 +1737,6 @@ function renderSignal(a) {
         risk.style.color = a.vol > .25 ? 'var(--red)' : a.vol > .1 ? 'var(--yellow)' : 'var(--green)';
     }
 
-    // fire alert if new signal
     if (strong && a.sig !== 'WAIT') {
         const now = Date.now();
         if (S.lastSig !== a.sig || (now - S.lastSigTime > 300000)) {
@@ -969,7 +1811,6 @@ function renderConfluence(a) {
     if (cl) cl.innerHTML = checks.map(c => `<li class="${c.ok ? 'ok' : ''}"><span class="ck-dot">${c.ok ? '✓' : '○'}</span>${c.n}</li>`).join('');
 }
 
-// ── Distance Metrics render ──
 function renderDistance(a) {
     const setVal = (id, value, suffix = '') => {
         const el = $(id);
@@ -1117,6 +1958,9 @@ function runAnalysis() {
     renderConfluence(a);
     renderDistance(a);
     updateCharts(a);
+    
+    // Update risk management UI
+    RiskManager.updateUI();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1129,6 +1973,11 @@ function openModal() {
     $('inTGChat').value = S.tgChat;
     $('inThresh').value = S.threshold;
     $('inInterval').value = S.interval;
+    $('inBalance').value = RiskManager.config.accountBalance;
+    $('inMaxSize').value = RiskManager.config.maxPositionSize;
+    $('inDailyLoss').value = RiskManager.config.maxDailyLoss;
+    $('inRiskPerTrade').value = RiskManager.config.riskPerTrade * 100;
+    $('inMinConf').value = RiskManager.config.minConfidenceForTrade;
 }
 
 function saveModal() {
@@ -1138,6 +1987,16 @@ function saveModal() {
     S.threshold = parseInt($('inThresh').value) || 65;
     S.interval = parseInt($('inInterval').value) || 2000;
 
+    // Update risk config
+    RiskManager.config.accountBalance = parseFloat($('inBalance').value) || 10000;
+    RiskManager.config.maxPositionSize = parseFloat($('inMaxSize').value) || 1000;
+    RiskManager.config.maxDailyLoss = parseFloat($('inDailyLoss').value) || 500;
+    RiskManager.config.riskPerTrade = (parseFloat($('inRiskPerTrade').value) || 2) / 100;
+    RiskManager.config.minConfidenceForTrade = parseInt($('inMinConf').value) || 70;
+    
+    RiskManager.peakBalance = RiskManager.config.accountBalance;
+    RiskManager.saveConfig();
+
     localStorage.setItem('pf_key', S.apiKey);
     localStorage.setItem('pf_tg_token', S.tgToken);
     localStorage.setItem('pf_tg_chat', S.tgChat);
@@ -1146,11 +2005,9 @@ function saveModal() {
 
     $('modalBG').classList.remove('open');
 
-    // Reconnect API
     S.pfMarket = null; S.pfConnected = false;
     pfUpdate();
 
-    // Restart analysis timer
     if (analysisTimer) clearInterval(analysisTimer);
     analysisTimer = setInterval(runAnalysis, S.interval);
 
@@ -1175,28 +2032,23 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
 // STARTUP
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize all modules
+    RiskManager.init();
+    
     initCharts();
     tickClock();
     setInterval(tickClock, 1000);
     document.addEventListener('click', () => initAudio(), { once: true });
 
-    // Load BTC candle history
     await loadCandles();
-
-    // Connect Binance WS
     wsConnect();
-
-    // Try Predict.fun API
     await pfUpdate();
     
-    // Запускаем автообновление Predict.fun каждые 5 минут
     startPfAutoUpdate();
 
-    // Start analysis
     setTimeout(runAnalysis, 1500);
     analysisTimer = setInterval(runAnalysis, S.interval);
 
-    // Periodic candle reload
     setInterval(loadCandles, 60000);
 });
 </script>
