@@ -460,7 +460,7 @@
         </div>
     </main>
 
-    <!-- RIGHT SIDEBAR -->
+    <!-- RIGHT SIDEBAR (без дублирования) -->
     <aside class="side-r">
 
         <!-- Signal -->
@@ -473,13 +473,6 @@
                 <span id="sigEdge" style="color:var(--green);">Edge: --</span>
                 <span id="sigRisk" style="color:var(--text2);">Risk: --</span>
             </div>
-        </div>
-
-        <!-- Prediction Market (правый сайдбар) -->
-        <div class="card">
-            <div class="card-hdr"><span>📈 Prediction Market</span></div>
-            <div class="row"><span class="row-label">Status</span><span class="row-val" id="pfStat" style="color:var(--cyan);">--</span></div>
-            <div class="row"><span class="row-label">Trading Fee</span><span class="row-val" id="pfFeeSub">--</span></div>
         </div>
 
         <!-- Distance Metrics -->
@@ -514,12 +507,6 @@
             <div class="alert-row"><span>Sell Sound</span><div class="sw on" id="swSell" onclick="swToggle(this,'sell')"></div></div>
             <div class="alert-row"><span>Telegram</span><div class="sw on" id="swTG" onclick="swToggle(this,'tg')"></div></div>
             <div class="alert-row"><span>Test Sound</span><button class="hdr-btn" onclick="testBeep()">🔊 TEST</button></div>
-        </div>
-
-        <!-- Trade Log -->
-        <div class="card">
-            <div class="card-hdr"><span>📋 Trade Log</span><button onclick="clearHist()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:9px;font-family:inherit;">CLEAR</button></div>
-            <div class="hist" id="histBody" style="max-height: 150px; overflow-y: auto; font-size: 10px;"></div>
         </div>
 
         <!-- Countdown -->
@@ -756,16 +743,12 @@ async function pfLoadMarket() {
             S.pfConnected = true;
             S.pfLastUpdate = new Date();
 
-            // Обновляем левую панель
+            // Обновляем только левую панель (дублирование убрано)
             txt('pfTitle', S.pfMarket.title || S.pfMarket.question || '--');
             txt('pfStatus', S.pfMarket.tradingStatus || 'OPEN');
             txt('pfId', S.pfMarket.id || '--');
             txt('pfFee', (S.pfMarket.feeRateBps || 0) + ' bps');
             txt('pfLastUpdate', S.pfLastUpdate.toLocaleTimeString());
-            
-            // Обновляем правую панель
-            txt('pfStat', S.pfMarket.tradingStatus || '--');
-            txt('pfFeeSub', (S.pfMarket.feeRateBps || 0) + ' bps');
             
             $('dotPF').className = 'dot dot-g';
             $('badgeAPI').className = 'badge badge-api ok';
@@ -787,8 +770,6 @@ async function pfLoadMarket() {
         txt('pfStatus', '--');
         txt('pfId', '--');
         txt('pfFee', '--');
-        txt('pfStat', '--');
-        txt('pfFeeSub', '--');
         txt('pfLastUpdate', '--');
         return false;
     }
@@ -1106,21 +1087,6 @@ function showToast(type, msg) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TRADE LOG
-// ═══════════════════════════════════════════════════════════
-function renderHist() {
-    const c = $('histBody'); if (!c) return;
-    if (!S.trades.length) { c.innerHTML = '<div style="text-align:center;color:var(--text2);padding:8px;">No trades</div>'; return; }
-    c.innerHTML = S.trades.slice(0, 20).map(t =>
-        `<div class="hist-row"><span style="color:${t.type==='BUY'?'var(--green)':'var(--red)'}">${t.type} ${t.side} ${t.size} @ ${t.price}</span><span style="color:var(--text2)">${t.time}</span></div>`
-    ).join('');
-}
-
-function clearHist() {
-    if (confirm('Clear trade log?')) { S.trades = []; localStorage.removeItem('pf_trades'); renderHist(); }
-}
-
-// ═══════════════════════════════════════════════════════════
 // CLOCK & COUNTDOWN
 // ═══════════════════════════════════════════════════════════
 function tickClock() {
@@ -1210,7 +1176,6 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
     initCharts();
-    renderHist();
     tickClock();
     setInterval(tickClock, 1000);
     document.addEventListener('click', () => initAudio(), { once: true });
