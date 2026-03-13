@@ -1012,17 +1012,177 @@ function updateCharts(a) {
         CH.main.data.datasets[0].data = samp.map(h => h.p);
         CH.main.update('none');
     }
-
-    if (CH.rsi && S.rsiHist.length > 0) {
+    if (CH.rsi) {
         CH.rsi.data.labels = S.rsiHist.map(h => h.t);
         CH.rsi.data.datasets[0].data = S.rsiHist.map(h => h.v);
         CH.rsi.update('none');
     }
-
-    if (CH.conf && S.confHist.length > 0) {
+    if (CH.conf) {
         CH.conf.data.labels = S.confHist.map(h => h.t);
         CH.conf.data.datasets[0].data = S.confHist.map(h => h.v);
-        CH.conf.data.datasets[1].data = S.confHist.map(h => h.s);
+        CH.conf.data.datasets[0].backgroundColor = S.confHist.map(h =>
+            h.s === 'BUY' ? 'rgba(0,230,118,.6)' : h.s === 'SELL' ? 'rgba(255,23,68,.6)' : 'rgba(120,130,180,.3)'
+        );
         CH.conf.update('none');
     }
 }
+
+// ═══════════════════════════════════════════════════════════
+// ALERT / TOAST
+// ═══════════════════════════════════════════════════════════
+function showAlert(a) {
+    const bg = $('alertBG'), box = $('alertBox');
+    if (!bg) return;
+    bg.classList.add('show');
+    if (a.sig === 'BUY') {
+        box.className = 'alert-box'; txt('alertIco', '📈');
+        txt('alertT', '▲ BUY YES'); $('alertT').style.color = 'var(--green)';
+    } else {
+        box.className = 'alert-box s'; txt('alertIco', '📉');
+        txt('alertT', '▼ BUY NO'); $('alertT').style.color = 'var(--red)';
+    }
+    txt('alertP', `BTC $${S.btc.price.toLocaleString()} | ${a.conf}%`);
+    setTimeout(() => bg.classList.remove('show'), 3500);
+}
+
+function showToast(type, msg) {
+    const t = $('toast'); if (!t) return;
+    t.className = 'toast show' + (type === 'SELL' ? ' t-sell' : '');
+    txt('toastT', type + ' SIGNAL'); txt('toastM', msg);
+    setTimeout(() => t.className = 'toast', 5000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TRADE LOG (оставил только лог, без quick trade UI)
+// ═══════════════════════════════════════════════════════════
+function renderHist() {
+    const c = $('histBody'); if (!c) return;
+    if (!S.trades.length) { c.innerHTML = '<div style="text-align:center;color:var(--text2);padding:8px;">No trades</div>'; return; }
+    c.innerHTML = S.trades.slice(0, 20).map(t =>
+        `<div class="hist-row"><span style="color:${t.type==='BUY'?'var(--green)':'var(--red)'}">${t.type} ${t.side} ${t.size} @ ${t.price}</span><span style="color:var(--text2)">${t.time}</span></div>`
+    ).join('');
+}
+
+function clearHist() {
+    if (confirm('Clear trade log?')) { S.trades = []; localStorage.removeItem('pf_trades'); renderHist(); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLOCK & COUNTDOWN
+// ═══════════════════════════════════════════════════════════
+function tickClock() {
+    const n = new Date();
+    txt('clock', n.toLocaleTimeString('en-US', {hour12: false}));
+    txt('utc', n.toUTCString().split(' ')[4]);
+
+    const m = n.getMinutes() % 15, s = n.getSeconds();
+    const rm = 14 - m, rs = 59 - s;
+    txt('cdNum', String(rm).padStart(2,'0') + ':' + String(rs).padStart(2,'0'));
+    const box = $('cdBox');
+    if (box) {
+        if (rm < 2) { box.className = 'cd-box closed'; txt('cdLabel', 'Cycle closing — wait'); }
+        else { box.className = 'cd-box'; txt('cdLabel', 'Entry window open'); }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN ANALYSIS LOOP
+// ═══════════════════════════════════════════════════════════
+function runAnalysis() {
+    const a = analyze();
+    if (!a) return;
+
+    renderIndicators(a);
+    renderSignal(a);
+    renderContext(a);
+    renderConfluence(a);
+    renderDistance(a);   // 👈 distance panel update
+    updateCharts(a);
+
+    // Use real orderbook if available, otherwise simulate
+    const ob = S.pfOrderbook || simOB(a);
+    renderOB(ob);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════
+function openModal() {
+    $('modalBG').classList.add('open');
+    $('inKey').value = S.apiKey;
+    $('inTGToken').value = S.tgToken;
+    $('inTGChat').value = S.tgChat;
+    $('inThresh').value = S.threshold;
+    $('inInterval').value = S.interval;
+}
+
+function saveModal() {
+    S.apiKey = $('inKey').value.trim() || S.apiKey;
+    S.tgToken = $('inTGToken').value.trim();
+    S.tgChat = $('inTGChat').value.trim() || '143405349';
+    S.threshold = parseInt($('inThresh').value) || 65;
+    S.interval = parseInt($('inInterval').value) || 2000;
+
+    localStorage.setItem('pf_key', S.apiKey);
+    localStorage.setItem('pf_tg_token', S.tgToken);
+    localStorage.setItem('pf_tg_chat', S.tgChat);
+    localStorage.setItem('pf_thresh', S.threshold);
+    localStorage.setItem('pf_interval', S.interval);
+
+    $('modalBG').classList.remove('open');
+
+    // Reconnect API
+    S.pfMarket = null; S.pfConnected = false; S.pfOrderbook = null;
+    pfUpdate();
+
+    // Restart analysis timer
+    if (analysisTimer) clearInterval(analysisTimer);
+    analysisTimer = setInterval(runAnalysis, S.interval);
+
+    showToast('BUY', 'Settings saved!');
+}
+
+document.addEventListener('click', e => {
+    if (e.target === $('modalBG')) $('modalBG').classList.remove('open');
+    if (e.target === $('alertBG')) $('alertBG').classList.remove('show');
+});
+
+// Timeframe buttons
+document.querySelectorAll('.tf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        S.chartSample = parseInt(btn.dataset.s) || 3;
+    });
+});
+
+// ═══════════════════════════════════════════════════════════
+// STARTUP
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+    initCharts();
+    renderHist();
+    tickClock();
+    setInterval(tickClock, 1000);
+    document.addEventListener('click', () => initAudio(), { once: true });
+
+    // Load BTC candle history
+    await loadCandles();
+
+    // Connect Binance WS
+    wsConnect();
+
+    // Try Predict.fun API
+    await pfUpdate();
+
+    // Start analysis
+    setTimeout(runAnalysis, 1500);
+    analysisTimer = setInterval(runAnalysis, S.interval);
+
+    // Periodic Predict.fun refresh
+    pfTimer = setInterval(pfUpdate, 15000);
+
+    // Periodic candle reload
+    setInterval(loadCandles, 60000);
+});
+</script>
