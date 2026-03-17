@@ -1244,7 +1244,68 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
         S.chartSample = parseInt(btn.dataset.s) || 3;
     });
 });
+// ═══════════════════════════════════════════════════════════
+// AUTO-TRADE EXECUTION
+// ═══════════════════════════════════════════════════════════
 
+async function notifyBot(signal, confidence, analysis) {
+    // Проверяем включен ли авто-тейд
+    if (!S.alerts.auto) {
+        console.log('⏸ Auto-trade disabled');
+        return;
+    }
+
+    if (!S.pfMarket || !S.pfMarket.id) {
+        console.warn('❌ No market selected');
+        return;
+    }
+
+    console.log(`🚀 Auto-trading: ${signal} with ${confidence}% confidence`);
+
+    try {
+        const response = await fetch(S.botUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Signal-Token': S.botToken
+            },
+            body: JSON.stringify({
+                signal,
+                market_id: S.pfMarket.id,
+                confidence,
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ Trade sent to bot:', result);
+            
+            // Логируем trade
+            S.trades.push({
+                time: new Date().toISOString(),
+                signal,
+                price: S.btc.price,
+                confidence,
+                market: S.pfMarket.id,
+                ...result
+            });
+            localStorage.setItem('pf_trades', JSON.stringify(S.trades));
+
+            // Уведомляем пользователя
+            showToast(signal, `Trade executed | ${confidence}% | Order #${result.result?.orderId || '?'}`);
+            tgSend(`✅ <b>TRADE EXECUTED</b>\n${signal} on ${S.pfMarket.title}\nConfidence: ${confidence}%\nOrder: ${result.result?.orderId || '?'}`);
+
+            return true;
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (e) {
+        console.error('❌ Trade execution failed:', e.message);
+        showToast('SELL', `⚠️ Trade failed: ${e.message}`);
+        return false;
+    }
+}
 // ═══════════════════════════════════════════════════════════
 // STARTUP
 // ═══════════════════════════════════════════════════════════
