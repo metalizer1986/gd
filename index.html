@@ -545,7 +545,11 @@
         </div>
         <div class="fg">
             <label>Trading Bot URL</label>
-            <input type="text" id="inBotUrl" placeholder="http://localhost:3333/signal">
+            <input type="text" id="inBotUrl" placeholder="http://localhost:8090/signal">
+        </div>
+        <div class="fg">
+            <label>Trading Bot Token</label>
+            <input type="password" id="inBotToken" placeholder="super_secret_token">
         </div>
         <div class="fg">
             <label>Signal Threshold (%)</label>
@@ -557,7 +561,7 @@
         </div>
         <button class="modal-btn" onclick="saveModal()">💾 Save & Apply</button>
         <p style="margin-top:12px;font-size:10px;color:var(--text2);text-align:center;">
-            ⚠ API key is stored in localStorage on this device only.
+            ⚠ Credentials are stored in localStorage on this device only.
         </p>
     </div>
 </div>
@@ -572,15 +576,16 @@ const S = {
     apiKey: localStorage.getItem('pf_key') || 'e07ea981-7dd9-41f4-b2ec-47890f1d4f9d',
     tgToken: localStorage.getItem('pf_tg_token') || '',
     tgChat: localStorage.getItem('pf_tg_chat') || '143405349',
-    botUrl: localStorage.getItem('pf_bot_url') || 'http://localhost:3333/signal',
+    botUrl: localStorage.getItem('pf_bot_url') || 'http://localhost:8090/signal',
+    botToken: localStorage.getItem('pf_bot_token') || 'super_secret_token',
     threshold: parseInt(localStorage.getItem('pf_thresh') || '65'),
     interval: parseInt(localStorage.getItem('pf_interval') || '2000'),
     alerts: { buy: true, sell: true, tg: true, auto: false },
 
     // runtime
     btc: { price: 0, prev: 0, hi: 0, lo: Infinity, vol: 0, ch: 0 },
-    priceHist: [],      // {t, p}
-    candles: [],        // 1min OHLCV from REST
+    priceHist: [],
+    candles: [],
     rsiHist: [],
     confHist: [],
     wsOK: false,
@@ -637,6 +642,41 @@ function testBeep() { beep('BUY'); setTimeout(() => beep('SELL'), 600); }
 function swToggle(el, key) { S.alerts[key] = !S.alerts[key]; el.classList.toggle('on'); }
 
 // ═══════════════════════════════════════════════════════════
+// 🎯 FIRE TRADE SIGNAL (ОТПРАВКА НА БОТА)
+// ═══════════════════════════════════════════════════════════
+async function fireTradeSignal(signal, marketId, confidence) {
+    try {
+        const response = await fetch(S.botUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Signal-Token': S.botToken
+            },
+            body: JSON.stringify({
+                signal,
+                market_id: marketId,
+                confidence
+            })
+        });
+
+        if (response.ok) {
+            S.botConnected = true;
+            S.botLastPing = Date.now();
+            updateBotBadge();
+            console.log('📡 Signal sent to bot:', { signal, marketId, confidence });
+            return true;
+        } else {
+            throw new Error(`HTTP ${response.status}`);
+        }
+    } catch (e) {
+        console.error('🔴 Bot signal error:', e.message);
+        S.botConnected = false;
+        updateBotBadge();
+        return false;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
 // TELEGRAM
 // ═══════════════════════════════════════════════════════════
 function tgSend(msg) {
@@ -649,52 +689,8 @@ function tgSend(msg) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// TRADING BOT NOTIFICATION
+// BOT BADGE UPDATE
 // ═══════════════════════════════════════════════════════════
-async function notifyBot(signal, confidence, analysis) {
-    if (!S.alerts.auto) return;
-    
-    const payload = {
-        signal: signal,
-        confidence: confidence,
-        price: S.btc.price,
-        timestamp: Date.now(),
-        rsi: analysis?.rsi,
-        ema: analysis?.bullEMA ? 'bull' : 'bear',
-        momentum: analysis?.mom,
-        volatility: analysis?.vol,
-        marketId: S.pfMarket?.id,
-        marketTitle: S.pfMarket?.title
-    };
-    
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        
-        const response = await fetch(S.botUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeout);
-        
-        if (response.ok) {
-            S.botConnected = true;
-            S.botLastPing = Date.now();
-            updateBotBadge();
-            console.log('📡 Signal sent to bot:', signal);
-        } else {
-            throw new Error(`HTTP ${response.status}`);
-        }
-    } catch (e) {
-        console.warn('Bot notification failed:', e.message);
-        S.botConnected = false;
-        updateBotBadge();
-    }
-}
-
 function updateBotBadge() {
     const badge = $('badgeBot');
     if (!badge) return;
@@ -704,16 +700,12 @@ function updateBotBadge() {
     if (S.botConnected && elapsed < 30000) {
         badge.className = 'badge badge-bot ok';
         txt('badgeBot', '● Bot Connected');
-    } else if (S.alerts.auto) {
+    } else {
         badge.className = 'badge badge-bot err';
         txt('badgeBot', '✖ Bot Offline');
-    } else {
-        badge.className = 'badge badge-bot wait';
-        txt('badgeBot', '⏳ Auto-Trade OFF');
     }
 }
 
-// Проверка соединения с ботом каждые 10 секунд
 setInterval(updateBotBadge, 10000);
 
 // ═══════════════════════════════════════════════════════════
@@ -752,12 +744,10 @@ function onTick() {
     const p = S.btc.price;
     if (!p) return;
 
-    // header
     txt('hdrPrice', '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
     const hc = $('hdrChange');
     if (hc) { hc.textContent = (S.btc.ch >= 0 ? '+' : '') + S.btc.ch.toFixed(2) + '%'; hc.style.color = S.btc.ch >= 0 ? 'var(--green)' : 'var(--red)'; }
 
-    // left panel
     txt('btcP', '$' + p.toLocaleString('en-US', {maximumFractionDigits:0}));
     const bc = $('btcCh');
     if (bc) { bc.textContent = (S.btc.ch >= 0 ? '+' : '') + S.btc.ch.toFixed(2) + '%'; bc.style.color = S.btc.ch >= 0 ? 'var(--green)' : 'var(--red)'; }
@@ -765,12 +755,10 @@ function onTick() {
     txt('btcLo', '$' + S.btc.lo.toLocaleString('en-US', {maximumFractionDigits:0}));
     txt('btcVol', fmt(S.btc.vol, 0) + ' BTC');
 
-    // price history
     const t = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
     S.priceHist.push({t, p});
     if (S.priceHist.length > 600) S.priceHist.shift();
 
-    // update current candle
     if (S.candles.length) {
         const last = S.candles[S.candles.length - 1];
         const nowMin = Math.floor(Date.now() / 60000) * 60000;
@@ -795,7 +783,7 @@ async function loadCandles() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// PREDICT.FUN API (с автообновлением каждые 5 минут)
+// PREDICT.FUN API
 // ═══════════════════════════════════════════════════════════
 async function pfFetch(endpoint) {
     const r = await fetch(PF_BASE + endpoint, {
@@ -826,7 +814,6 @@ async function pfLoadMarket() {
             S.pfConnected = true;
             S.pfLastUpdate = new Date();
 
-            // Обновляем только левую панель (дублирование убрано)
             txt('pfTitle', S.pfMarket.title || S.pfMarket.question || '--');
             txt('pfStatus', S.pfMarket.tradingStatus || 'OPEN');
             txt('pfId', S.pfMarket.id || '--');
@@ -848,7 +835,6 @@ async function pfLoadMarket() {
         $('badgeAPI').className = 'badge badge-api err';
         txt('badgeAPI', '✖ API: ' + e.message);
         
-        // Очищаем данные при ошибке
         txt('pfTitle', '--');
         txt('pfStatus', '--');
         txt('pfId', '--');
@@ -862,13 +848,12 @@ async function pfUpdate() {
     await pfLoadMarket();
 }
 
-// Запуск автообновления каждые 5 минут (300000 мс)
 function startPfAutoUpdate() {
     if (pfUpdateTimer) clearInterval(pfUpdateTimer);
     pfUpdateTimer = setInterval(async () => {
         console.log('🔄 Auto-updating Predict.Fun market data...');
         await pfUpdate();
-    }, 300000); // 5 минут
+    }, 300000);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -925,7 +910,6 @@ function analyze() {
     const avg = rets.reduce((a,b) => a+b, 0) / rets.length;
     const vol = Math.sqrt(rets.reduce((a,r2) => a + (r2-avg)**2, 0) / rets.length);
 
-    // scoring
     let bull = 0, bear = 0;
     if (r > 55) bull += 2; if (r > 65) bull += 1;
     if (r < 45) bear += 2; if (r < 35) bear += 1;
