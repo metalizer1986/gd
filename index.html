@@ -240,18 +240,25 @@ function testBeep() { beep('BUY'); setTimeout(() => beep('SELL'), 600); }
 function swToggle(el, key) { S.alerts[key] = !S.alerts[key]; el.classList.toggle('on'); }
 
 // ═══════════════════════════════════════════════════════════
-// 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ СИГНАЛА НА БОТА
+// 🎯 FIRE TRADE SIGNAL — ИСПРАВЛЕННАЯ ВЕРСИЯ
 // ═══════════════════════════════════════════════════════════
 async function notifyBot(signal, confidence, analysis) {
   console.log('🔔 notifyBot called:', { signal, confidence, auto: S.alerts.auto });
   
   if (!S.alerts.auto) { console.log('⏸ Auto-trade disabled'); return; }
   
-  // 🔴 Критично: проверяем market_id
-  const marketId = S.pfMarket?.id?.trim();
-  if (!marketId || typeof marketId !== 'string') {
-    console.warn('❌ Cannot send: invalid market_id', { pfMarket: S.pfMarket });
+  // 🔴 Критично: безопасно получаем market_id как строку
+  const rawId = S.pfMarket?.id;
+  if (!rawId) {
+    console.warn('❌ Cannot send: pfMarket.id is empty', { pfMarket: S.pfMarket });
     showToast('WAIT', '⚠️ Market not loaded');
+    return;
+  }
+  
+  // ✅ Гарантируем строку + триммим
+  const marketId = String(rawId).trim();
+  if (!marketId) {
+    console.warn('❌ Cannot send: market_id is empty after trim', { rawId });
     return;
   }
   
