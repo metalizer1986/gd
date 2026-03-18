@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Predict.Fun — Personal BTC 15min Trading Terminal</title>
+<title>Predict.Fun — BTC 15min Trading Terminal</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,11 +24,7 @@
   --border: #263055;
 }
 body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; background: var(--bg0); color: var(--text); min-height: 100vh; }
-
-/* LAYOUT */
 .app { display: grid; grid-template-columns: 280px 1fr 300px; grid-template-rows: 56px 1fr; height: 100vh; gap: 1px; background: var(--border); }
-
-/* HEADER */
 .hdr { grid-column: 1/-1; background: var(--bg1); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
 .hdr-left { display: flex; align-items: center; gap: 14px; }
 .logo-dot { width: 28px; height: 28px; background: linear-gradient(135deg, var(--green), var(--cyan)); border-radius: 7px; animation: glow 2s infinite; }
@@ -45,8 +41,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .hdr-utc { font-size: 10px; color: var(--text2); }
 .hdr-btn { background: var(--bg2); border: 1px solid var(--border); color: var(--text2); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-family: inherit; transition: .2s; }
 .hdr-btn:hover { border-color: var(--blue); color: var(--text); }
-
-/* STATUS BADGES */
 .badge { position: fixed; z-index: 900; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 700; backdrop-filter: blur(8px); }
 .badge-api { top: 64px; right: 16px; }
 .badge-api.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
@@ -55,8 +49,9 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .badge-ws { top: 64px; left: 16px; }
 .badge-ws.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
 .badge-ws.err { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
-
-/* PANELS */
+.badge-trade { top: 64px; left: 200px; }
+.badge-trade.ok { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.badge-trade.off { background: rgba(255,255,255,.1); color: var(--text2); border: 1px solid var(--border); }
 .side-l, .side-r { background: var(--bg1); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .main { background: var(--bg0); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
@@ -70,8 +65,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .row:last-child { border-bottom: none; }
 .row-label { font-size: 11px; color: var(--text2); }
 .row-val { font-size: 13px; font-weight: 700; }
-
-/* CHART */
 .chart-box { position: relative; }
 .chart-box.big { height: 340px; }
 .chart-box.sm { height: 140px; }
@@ -81,8 +74,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .tf-btn { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 3px 10px; border-radius: 5px; font-size: 10px; cursor: pointer; font-family: inherit; }
 .tf-btn.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 .ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-/* SIGNAL CARD */
 .sig-card { background: var(--bg2); border: 2px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; transition: .3s; }
 .sig-card.buy { border-color: var(--green); box-shadow: 0 0 24px rgba(0,230,118,.15); }
 .sig-card.sell { border-color: var(--red); box-shadow: 0 0 24px rgba(255,23,68,.15); }
@@ -95,8 +86,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .prog-fill.green { background: linear-gradient(90deg, var(--green), var(--cyan)); }
 .prog-fill.red { background: linear-gradient(90deg, var(--red), var(--yellow)); }
 .sig-meta { display: flex; justify-content: space-between; font-size: 11px; }
-
-/* ALERTS */
 .alert-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
 .alert-row:last-child { border-bottom: none; }
 .alert-row span { font-size: 11px; }
@@ -104,8 +93,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .sw.on { background: var(--green); }
 .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .3s; }
 .sw.on::after { left: 20px; }
-
-/* CONFLUENCE */
 .conf-score { font-size: 28px; font-weight: 900; text-align: center; margin: 8px 0; }
 .conf-score.hi { color: var(--green); }
 .conf-score.lo { color: var(--red); }
@@ -115,28 +102,20 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .ck li.ok { color: var(--green); }
 .ck-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--bg0); display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
 .ck li.ok .ck-dot { background: var(--green); color: #000; }
-
-/* COMPACT CONFLUENCE */
 .conf-compact .conf-score { font-size: 24px; margin: 4px 0; }
 .conf-compact .prog { margin: 8px 0; }
 .conf-compact .ck li { font-size: 9px; padding: 3px 0; }
-
-/* COUNTDOWN */
 .cd-box { border: 2px solid var(--green); background: linear-gradient(135deg, rgba(0,230,118,.06), rgba(24,255,255,.06)); border-radius: 10px; padding: 16px; text-align: center; }
 .cd-box.closed { border-color: var(--red); background: linear-gradient(135deg, rgba(255,23,68,.06), rgba(255,171,0,.06)); }
 .cd-num { font-size: 44px; font-weight: 900; color: var(--green); margin: 8px 0; }
 .cd-box.closed .cd-num { color: var(--red); }
 .cd-label { font-size: 11px; color: var(--text2); }
-
-/* CONTEXT */
 .ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ctx { background: var(--bg1); padding: 10px; border-radius: 7px; text-align: center; border-left: 3px solid var(--blue); }
 .ctx.bull { border-left-color: var(--green); }
 .ctx.bear { border-left-color: var(--red); }
 .ctx-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; }
 .ctx-val { font-size: 15px; font-weight: 800; margin-top: 3px; }
-
-/* MODAL */
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 2000; align-items: center; justify-content: center; }
 .modal-bg.open { display: flex; }
 .modal { background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 92%; max-width: 460px; }
@@ -145,15 +124,11 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .fg label { display: block; font-size: 10px; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
 .fg input, .fg select { width: 100%; background: var(--bg2); border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 7px; font-family: inherit; font-size: 12px; }
 .modal-btn { width: 100%; background: var(--blue); color: #fff; border: none; padding: 11px; border-radius: 7px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; margin-top: 6px; }
-
-/* TOAST */
 .toast { position: fixed; top: 72px; right: 20px; background: var(--bg2); border: 2px solid var(--green); border-radius: 10px; padding: 14px 20px; box-shadow: 0 8px 32px rgba(0,0,0,.5); transform: translateX(360px); transition: transform .3s; z-index: 950; max-width: 280px; }
 .toast.show { transform: translateX(0); }
 .toast.t-sell { border-color: var(--red); }
 .toast-t { font-size: 12px; font-weight: 700; }
 .toast-m { font-size: 11px; color: var(--text2); margin-top: 3px; }
-
-/* ALERT OVERLAY */
 .alert-bg { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 2500; display: none; }
 .alert-bg.show { display: flex; align-items: center; justify-content: center; }
 .alert-box { background: var(--bg2); border: 3px solid var(--green); border-radius: 18px; padding: 36px 56px; text-align: center; box-shadow: 0 0 60px rgba(0,230,118,.3); transform: scale(0); transition: transform .3s; }
@@ -162,13 +137,9 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 .alert-ico { font-size: 56px; margin-bottom: 12px; }
 .alert-t { font-size: 28px; font-weight: 900; }
 .alert-p { font-size: 18px; color: var(--text2); margin-top: 8px; }
-
-/* SCROLLBAR */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg1); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-/* RESPONSIVE */
 @media (max-width: 1200px) { .app { grid-template-columns: 240px 1fr 260px; } }
 @media (max-width: 900px) { .app { grid-template-columns: 1fr; grid-template-rows: 56px auto; height: auto; } .side-l, .side-r { display: none; } }
 </style>
@@ -178,6 +149,7 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 <!-- Status badges -->
 <div class="badge badge-ws err" id="badgeWS">⏳ Binance WS...</div>
 <div class="badge badge-api wait" id="badgeAPI">⏳ Predict.fun API...</div>
+<div class="badge badge-trade off" id="badgeTrade">⏸️ Auto-Trade OFF</div>
 
 <!-- Alert overlay -->
 <div class="alert-bg" id="alertBG">
@@ -252,20 +224,16 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 <div class="card">
   <div class="card-hdr"><span>Technical Indicators</span></div>
   <div class="row"><span class="row-label">RSI(14)</span><span class="row-val" id="indRSI">--</span></div>
-  <div class="row"><span class="row-label">Stoch RSI</span><span class="row-val" id="indStoch">--</span></div>
   <div class="row"><span class="row-label">EMA 9/21</span><span class="row-val" id="indEMA">--</span></div>
   <div class="row"><span class="row-label">MACD</span><span class="row-val" id="indMACD">--</span></div>
   <div class="row"><span class="row-label">Momentum</span><span class="row-val" id="indMom">--</span></div>
   <div class="row"><span class="row-label">Volatility</span><span class="row-val" id="indVol">--</span></div>
-  <div class="row"><span class="row-label">ATR</span><span class="row-val" id="indATR">--</span></div>
-  <div class="row"><span class="row-label">Resistance</span><span class="row-val" id="indRes">--</span></div>
-  <div class="row"><span class="row-label">Support</span><span class="row-val" id="indSup">--</span></div>
 </div>
 
-<!-- CONFLUENCE -->
+<!-- CONFLUENCE (7 checks) -->
 <div class="card conf-compact">
   <div class="card-hdr"><span>🔍 Confluence Check</span></div>
-  <div class="conf-score" id="confScore">--/8</div>
+  <div class="conf-score" id="confScore">--/7</div>
   <div class="prog"><div class="prog-fill green" id="confBar" style="width:0;"></div></div>
   <ul class="ck" id="ckList"></ul>
 </div>
@@ -328,8 +296,6 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
   <div class="row"><span class="row-label">RSI − 50</span><span class="row-val" id="distRSI">--</span></div>
   <div class="row"><span class="row-label">Price − 15m Avg</span><span class="row-val" id="distPrice">--</span></div>
   <div class="row"><span class="row-label">Momentum (5m)</span><span class="row-val" id="distMom">--</span></div>
-  <div class="row"><span class="row-label">To Resistance</span><span class="row-val" id="distRes">--</span></div>
-  <div class="row"><span class="row-label">To Support</span><span class="row-val" id="distSup">--</span></div>
 </div>
 
 <!-- Alerts -->
@@ -338,6 +304,7 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
   <div class="alert-row"><span>Buy Sound</span><div class="sw on" id="swBuy" onclick="swToggle(this,'buy')"></div></div>
   <div class="alert-row"><span>Sell Sound</span><div class="sw on" id="swSell" onclick="swToggle(this,'sell')"></div></div>
   <div class="alert-row"><span>Telegram</span><div class="sw on" id="swTG" onclick="swToggle(this,'tg')"></div></div>
+  <div class="alert-row"><span>Auto-Trade</span><div class="sw" id="swTrade" onclick="swToggle(this,'trade')"></div></div>
   <div class="alert-row"><span>Test Sound</span><button class="hdr-btn" onclick="testBeep()">🔊 TEST</button></div>
 </div>
 
@@ -375,6 +342,10 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
       <label>Analysis Interval (ms)</label>
       <input type="number" id="inInterval" value="2000" min="500" max="30000">
     </div>
+    <div class="fg">
+      <label>Trade Server URL</label>
+      <input type="text" id="inTradeServer" value="http://localhost:3499">
+    </div>
     <button class="modal-btn" onclick="saveModal()">💾 Save & Apply</button>
     <p style="margin-top:12px;font-size:10px;color:var(--text2);text-align:center;">
       ⚠️ API key is stored in localStorage on this device only.
@@ -388,6 +359,7 @@ body { font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; backgr
 // ═══════════════════════════════════════════════════════════
 const PF_BASE = 'https://api.predict.fun';
 const PROXY = 'https://corsproxy.io/?';
+const TRADE_SERVER = 'http://localhost:3499';
 
 const S = {
   apiKey: localStorage.getItem('pf_key') || 'e07ea981-7dd9-41f4-b2ec-47890f1d4f9d',
@@ -395,8 +367,8 @@ const S = {
   tgChat: localStorage.getItem('pf_tg_chat') || '143405349',
   threshold: parseInt(localStorage.getItem('pf_thresh')) || 65,
   interval: parseInt(localStorage.getItem('pf_interval')) || 2000,
-  alerts: { buy: true, sell: true, tg: true },
-  // runtime
+  tradeServer: localStorage.getItem('pf_trade_server') || TRADE_SERVER,
+  alerts: { buy: true, sell: true, tg: true, trade: false },
   btc: { price: 0, prev: 0, hi: 0, lo: Infinity, vol: 0, ch: 0 },
   priceHist: [],
   candles: [],
@@ -409,7 +381,8 @@ const S = {
   lastSigTime: 0,
   trades: JSON.parse(localStorage.getItem('pf_trades') || '[]'),
   chartSample: 3,
-  pfLastUpdate: null
+  pfLastUpdate: null,
+  tradeConnected: false
 };
 
 let audio = null;
@@ -418,7 +391,6 @@ let wsRef = null;
 let analysisTimer = null;
 let pfTimer = null;
 let pfUpdateTimer = null;
-let wsReconnectAttempts = 0;
 
 // ═══════════════════════════════════════════════════════════
 // UTILS
@@ -462,6 +434,10 @@ function testBeep() { beep('BUY'); setTimeout(() => beep('SELL'), 600); }
 function swToggle(el, key) {
   S.alerts[key] = !S.alerts[key];
   el.classList.toggle('on');
+  
+  if (key === 'trade') {
+    updateTradeBadge();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -478,6 +454,73 @@ function tgSend(msg) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// TRADE SERVER
+// ═══════════════════════════════════════════════════════════
+async function checkTradeServer() {
+  try {
+    const response = await fetch(S.tradeServer + '/health');
+    const data = await response.json();
+    S.tradeConnected = data.success;
+    updateTradeBadge();
+    return true;
+  } catch (e) {
+    S.tradeConnected = false;
+    updateTradeBadge();
+    return false;
+  }
+}
+
+function updateTradeBadge() {
+  const badge = $('badgeTrade');
+  if (!badge) return;
+  
+  if (S.alerts.trade && S.tradeConnected) {
+    badge.className = 'badge badge-trade ok';
+    badge.textContent = '● Auto-Trade ON';
+  } else if (!S.alerts.trade) {
+    badge.className = 'badge badge-trade off';
+    badge.textContent = '⏸️ Auto-Trade OFF';
+  } else if (!S.tradeConnected) {
+    badge.className = 'badge badge-trade err';
+    badge.textContent = '✖️ Trade Server';
+  }
+}
+
+async function sendSignalToServer(signal) {
+  if (!S.alerts.trade) return { sent: false, reason: 'Trade disabled' };
+  if (!S.tradeConnected) return { sent: false, reason: 'Server not connected' };
+  
+  try {
+    const response = await fetch(S.tradeServer + '/signal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sig: signal.sig,
+        conf: signal.conf,
+        rsi: signal.rsi,
+        bullEMA: signal.bullEMA,
+        mom: signal.mom,
+        vol: signal.vol,
+        price: S.btc.price,
+        timestamp: new Date().toISOString()
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success && result.result?.traded) {
+      console.log('✅ Auto-trade executed:', result.result);
+      showToast(signal.sig, `Trade: ${signal.sig} $1`);
+    }
+    
+    return { sent: true, result: result.result };
+  } catch (e) {
+    console.error('Trade server error:', e);
+    return { sent: false, error: e.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // BINANCE WEBSOCKET
 // ═══════════════════════════════════════════════════════════
 function wsConnect() {
@@ -486,7 +529,6 @@ function wsConnect() {
   
   wsRef.onopen = () => {
     S.wsOK = true;
-    wsReconnectAttempts = 0;
     $('badgeWS').className = 'badge badge-ws ok';
     txt('badgeWS', '● Binance LIVE');
     $('dotBTC').className = 'dot dot-g';
@@ -510,10 +552,7 @@ function wsConnect() {
     $('badgeWS').className = 'badge badge-ws err';
     txt('badgeWS', '✖️ Binance offline');
     $('dotBTC').className = 'dot dot-r';
-    // Exponential backoff
-    wsReconnectAttempts++;
-    const delay = Math.min(3000 * Math.pow(2, wsReconnectAttempts), 30000);
-    setTimeout(wsConnect, delay);
+    setTimeout(wsConnect, 3000);
   };
   
   wsRef.onerror = () => wsRef.close();
@@ -523,7 +562,6 @@ function onTick() {
   const p = S.btc.price;
   if (!p) return;
   
-  // header
   txt('hdrPrice', '$' + p.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}));
   const hc = $('hdrChange');
   if (hc) {
@@ -531,7 +569,6 @@ function onTick() {
     hc.style.color = S.btc.ch >= 0 ? 'var(--green)' : 'var(--red)';
   }
   
-  // left panel
   txt('btcP', '$' + p.toLocaleString('en-US', {maximumFractionDigits:0}));
   const bc = $('btcCh');
   if (bc) {
@@ -542,12 +579,10 @@ function onTick() {
   txt('btcLo', '$' + S.btc.lo.toLocaleString('en-US', {maximumFractionDigits:0}));
   txt('btcVol', fmt(S.btc.vol, 0) + ' BTC');
   
-  // price history
   const t = new Date().toLocaleTimeString('en-US', {hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
   S.priceHist.push({t, p});
   if (S.priceHist.length > 600) S.priceHist.shift();
   
-  // update current candle
   if (S.candles.length) {
     const last = S.candles[S.candles.length - 1];
     const nowMin = Math.floor(Date.now() / 60000) * 60000;
@@ -563,7 +598,7 @@ function onTick() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// BINANCE REST — HISTORICAL CANDLES
+// BINANCE REST
 // ═══════════════════════════════════════════════════════════
 async function loadCandles() {
   try {
@@ -578,13 +613,7 @@ async function loadCandles() {
 // ═══════════════════════════════════════════════════════════
 // PREDICT.FUN API
 // ═══════════════════════════════════════════════════════════
-let lastPfCall = 0;
-
 async function pfFetch(endpoint) {
-  const now = Date.now();
-  if (now - lastPfCall < 1000) await new Promise(r => setTimeout(r, 1000));
-  lastPfCall = now;
-  
   const r = await fetch(PF_BASE + endpoint, {
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'x-api-key': S.apiKey },
     signal: AbortSignal.timeout(8000)
@@ -638,15 +667,11 @@ async function pfLoadMarket() {
   }
 }
 
-async function pfUpdate() {
-  await pfLoadMarket();
-}
-
 function startPfAutoUpdate() {
   if (pfUpdateTimer) clearInterval(pfUpdateTimer);
   pfUpdateTimer = setInterval(async () => {
     console.log('🔄 Auto-updating Predict.Fun market data...');
-    await pfUpdate();
+    await pfLoadMarket();
   }, 300000);
 }
 
@@ -673,20 +698,6 @@ function rsi(closes, p = 14) {
   return 100 - 100 / (1 + (g/p) / (l/p));
 }
 
-function stochRSI(closes, period = 14) {
-  if (closes.length < period * 2) return 50;
-  const rsiVals = [];
-  for (let i = period; i <= closes.length; i++) {
-    rsiVals.push(rsi(closes.slice(0, i), period));
-  }
-  if (rsiVals.length < period) return 50;
-  const current = rsiVals[rsiVals.length - 1];
-  const min = Math.min(...rsiVals.slice(-period));
-  const max = Math.max(...rsiVals.slice(-period));
-  if (max === min) return 50;
-  return ((current - min) / (max - min)) * 100;
-}
-
 function macd(closes) {
   if (closes.length < 26) return { line: 0, signal: 0, hist: 0 };
   const e12 = ema(closes, 12);
@@ -699,38 +710,12 @@ function macd(closes) {
   return { line, signal: sl, hist: line - sl };
 }
 
-function atr(candles, period = 14) {
-  if (candles.length < period + 1) return 0;
-  const trs = [];
-  for (let i = 1; i < candles.length; i++) {
-    const c = candles[i], p = candles[i - 1];
-    trs.push(Math.max(c.h - c.l, Math.abs(c.h - p.c), Math.abs(c.l - p.c)));
-  }
-  return trs.slice(-period).reduce((a, b) => a + b) / period;
-}
-
-function getLevels(candles, lookback = 30) {
-  if (candles.length < lookback) {
-    return { resistance: 0, support: 0, r2: 0, s2: 0 };
-  }
-  const slice = candles.slice(-lookback);
-  const highs = slice.map(c => c.h).sort((a, b) => b - a);
-  const lows = slice.map(c => c.l).sort((a, b) => a - b);
-  return {
-    resistance: highs[0],
-    support: lows[0],
-    r2: highs[1] || highs[0],
-    s2: lows[1] || lows[0]
-  };
-}
-
 function analyze() {
   const closes = S.candles.map(c => c.c);
   if (closes.length < 30) return null;
   
   const all = [...closes, S.btc.price].filter(Boolean);
   const r = rsi(all, 14);
-  const stochR = stochRSI(all, 14);
   const e9 = ema(all, 9), e21 = ema(all, 21);
   const e9p = ema(all.slice(0, -1), 9), e21p = ema(all.slice(0, -1), 21);
   const bullEMA = e9 > e21;
@@ -738,11 +723,7 @@ function analyze() {
   const crossDn = e9 < e21 && e9p >= e21p;
   const m = macd(all);
   const mom = all.length >= 6 ? ((all[all.length-1] / all[all.length-6]) - 1) * 100 : 0;
-  const atrVal = atr(S.candles, 14);
-  const levels = getLevels(S.candles, 30);
-  const price = S.btc.price;
   
-  // volatility
   const rets = [];
   for (let i = Math.max(1, all.length - 15); i < all.length; i++) {
     rets.push((all[i] / all[i-1] - 1) * 100);
@@ -750,7 +731,7 @@ function analyze() {
   const avg = rets.reduce((a, b) => a + b, 0) / rets.length;
   const vol = Math.sqrt(rets.reduce((a, r2) => a + (r2 - avg) ** 2, 0) / rets.length);
   
-  // scoring
+  // Scoring (max 18 for 7 checks)
   let bull = 0, bear = 0;
   
   // RSI (0-4)
@@ -760,12 +741,6 @@ function analyze() {
   if (r < 45) bear += 2;
   if (r < 35) bear += 1;
   if (r < 25) bear += 1;
-  
-  // Stochastic RSI (0-3)
-  if (stochR > 80) bear += 2;
-  if (stochR > 90) bear += 1;
-  if (stochR < 20) bull += 2;
-  if (stochR < 10) bull += 1;
   
   // EMA (0-6)
   if (bullEMA) bull += 3;
@@ -783,32 +758,17 @@ function analyze() {
   if (mom < -0.03) bear += 2;
   if (mom < -0.1) bear += 1;
   
-  // Support/Resistance (0-2)
-  if (levels.resistance > 0 && price >= levels.resistance * 0.998) {
-    bear += 2;
-  }
-  if (levels.support > 0 && price <= levels.support * 1.002) {
-    bull += 2;
-  }
-  
-  // ATR
-  const atrPct = levels.resistance > 0 ? (atrVal / levels.resistance) * 100 : 0;
-  if (atrPct < 0.5) {
-    bull += 1; bear += 1;
-  }
+  // Volatility (bonus)
+  if (vol < 0.12) { bull += 1; bear += 1; }
   
   const mx = Math.max(bull, bear);
-  const conf = Math.min(95, Math.round((mx / 22) * 100));
+  const conf = Math.min(95, Math.round((mx / 18) * 100));
   
   let sig = 'WAIT';
   if (bull > bear && conf >= S.threshold - 15) sig = 'BUY';
   if (bear > bull && conf >= S.threshold - 15) sig = 'SELL';
   
-  return {
-    sig, conf, rsi: r, stochRSI: stochR, e9, e21, bullEMA, crossUp, crossDn,
-    macd: m, mom, vol, atr: atrVal, atrPct, levels,
-    bull, bear, lowVol: vol < 0.12
-  };
+  return { sig, conf, rsi: r, e9, e21, bullEMA, crossUp, crossDn, macd: m, mom, vol, bull, bear, lowVol: vol < 0.12 };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -863,17 +823,20 @@ function renderSignal(a) {
     risk.style.color = a.vol > .25 ? 'var(--red)' : a.vol > .1 ? 'var(--yellow)' : 'var(--green)';
   }
   
-  // fire alert
+  // Fire alert and send to trade server
   if (strong && a.sig !== 'WAIT') {
     const now = Date.now();
     if (S.lastSig !== a.sig || (now - S.lastSigTime > 300000)) {
       S.lastSig = a.sig;
       S.lastSigTime = now;
+      
       if (S.alerts[a.sig.toLowerCase()]) {
         beep(a.sig);
         showAlert(a);
       }
+      
       showToast(a.sig, 'BTC $' + S.btc.price.toLocaleString() + ' | ' + a.conf + '%');
+      
       tgSend(
         '🎯 <b>' + a.sig + ' SIGNAL</b>\n' +
         'BTC: <b>$' + S.btc.price.toLocaleString() + '</b>\n' +
@@ -881,6 +844,9 @@ function renderSignal(a) {
         'RSI: ' + a.rsi.toFixed(1) + ' | EMA: ' + (a.bullEMA ? 'BULL' : 'BEAR') + '\n' +
         'Mom: ' + a.mom.toFixed(3) + '% | Vol: ' + a.vol.toFixed(3) + '%'
       );
+      
+      // Send to trade server
+      sendSignalToServer(a);
     }
   }
 }
@@ -892,12 +858,6 @@ function renderIndicators(a) {
   if (re) {
     re.textContent = a.rsi.toFixed(1);
     re.style.color = a.rsi > 70 ? 'var(--red)' : a.rsi < 30 ? 'var(--green)' : 'var(--text)';
-  }
-  
-  const stochEl = $('indStoch');
-  if (stochEl) {
-    stochEl.textContent = a.stochRSI.toFixed(1);
-    stochEl.style.color = a.stochRSI > 80 ? 'var(--red)' : a.stochRSI < 20 ? 'var(--green)' : 'var(--text)';
   }
   
   const ee = $('indEMA');
@@ -922,24 +882,6 @@ function renderIndicators(a) {
   if (vo) {
     vo.textContent = a.vol.toFixed(3) + '%';
     vo.style.color = a.vol > .2 ? 'var(--yellow)' : 'var(--green)';
-  }
-  
-  const atEl = $('indATR');
-  if (atEl) {
-    atEl.textContent = '$' + a.atr.toFixed(0);
-    atEl.style.color = a.atrPct > 1 ? 'var(--yellow)' : 'var(--text)';
-  }
-  
-  const resEl = $('indRes');
-  if (resEl && a.levels.resistance > 0) {
-    resEl.textContent = '$' + a.levels.resistance.toFixed(0);
-    resEl.style.color = 'var(--red)';
-  }
-  
-  const supEl = $('indSup');
-  if (supEl && a.levels.support > 0) {
-    supEl.textContent = '$' + a.levels.support.toFixed(0);
-    supEl.style.color = 'var(--green)';
   }
 }
 
@@ -973,23 +915,23 @@ function renderContext(a) {
 function renderConfluence(a) {
   if (!a) return;
   
+  // 7 checks (old version)
   const checks = [
     { n: 'Binance WS', ok: S.wsOK },
     { n: 'RSI confirms (' + a.rsi.toFixed(0) + ')', ok: (a.sig === 'BUY' && a.rsi > 50) || (a.sig === 'SELL' && a.rsi < 50) },
-    { n: 'Stoch RSI', ok: (a.sig === 'BUY' && a.stochRSI < 30) || (a.sig === 'SELL' && a.stochRSI > 70) },
     { n: 'EMA ' + (a.bullEMA ? 'bullish' : 'bearish'), ok: (a.sig === 'BUY' && a.bullEMA) || (a.sig === 'SELL' && !a.bullEMA) },
     { n: 'MACD histogram', ok: (a.sig === 'BUY' && a.macd.hist > 0) || (a.sig === 'SELL' && a.macd.hist < 0) },
     { n: 'Momentum aligned', ok: (a.sig === 'BUY' && a.mom > 0) || (a.sig === 'SELL' && a.mom < 0) },
-    { n: 'Away from levels', ok: (a.sig === 'BUY' && S.btc.price < a.levels.resistance * 0.995) || (a.sig === 'SELL' && S.btc.price > a.levels.support * 1.005) },
+    { n: 'Low volatility', ok: a.lowVol },
     { n: 'Predict.fun API', ok: S.pfConnected }
   ];
   
   const score = checks.filter(c => c.ok).length;
-  const max = checks.length;
+  const max = checks.length; // 7
   
   txt('confScore', score + '/' + max);
   const cs = $('confScore');
-  if (cs) cs.className = 'conf-score ' + (score >= 6 ? 'hi' : score >= 4 ? 'mid' : 'lo');
+  if (cs) cs.className = 'conf-score ' + (score >= 5 ? 'hi' : score >= 3 ? 'mid' : 'lo');
   
   const bar = $('confBar');
   if (bar) bar.style.width = (score / max * 100) + '%';
@@ -1022,22 +964,6 @@ function renderDistance(a) {
   setVal('distPrice', priceDist, ' USD');
   
   setVal('distMom', a.mom, '%');
-  
-  // Support/Resistance distance
-  const resDist = a.levels.resistance > 0 ? ((a.levels.resistance - S.btc.price) / S.btc.price * 100).toFixed(2) : '--';
-  const supDist = a.levels.support > 0 ? ((S.btc.price - a.levels.support) / S.btc.price * 100).toFixed(2) : '--';
-  
-  const resEl = $('distRes');
-  if (resEl) {
-    resEl.textContent = resDist + '%';
-    resEl.style.color = parseFloat(resDist) < 0.5 ? 'var(--red)' : 'var(--text)';
-  }
-  
-  const supEl = $('distSup');
-  if (supEl) {
-    supEl.textContent = supDist + '%';
-    supEl.style.color = parseFloat(supDist) < 0.5 ? 'var(--green)' : 'var(--text)';
-  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1121,6 +1047,7 @@ function openModal() {
   $('inTGChat').value = S.tgChat;
   $('inThresh').value = S.threshold;
   $('inInterval').value = S.interval;
+  $('inTradeServer').value = S.tradeServer;
 }
 
 function saveModal() {
@@ -1129,23 +1056,25 @@ function saveModal() {
   S.tgChat = $('inTGChat').value.trim() || '143405349';
   S.threshold = parseInt($('inThresh').value) || 65;
   S.interval = parseInt($('inInterval').value) || 2000;
+  S.tradeServer = $('inTradeServer').value.trim() || TRADE_SERVER;
   
   localStorage.setItem('pf_key', S.apiKey);
   localStorage.setItem('pf_tg_token', S.tgToken);
   localStorage.setItem('pf_tg_chat', S.tgChat);
   localStorage.setItem('pf_thresh', S.threshold);
   localStorage.setItem('pf_interval', S.interval);
+  localStorage.setItem('pf_trade_server', S.tradeServer);
   
   $('modalBG').classList.remove('open');
   
-  // Reconnect API
   S.pfMarket = null;
   S.pfConnected = false;
-  pfUpdate();
+  pfLoadMarket();
   
-  // Restart analysis timer
   if (analysisTimer) clearInterval(analysisTimer);
   analysisTimer = setInterval(runAnalysis, S.interval);
+  
+  checkTradeServer();
   
   showToast('BUY', 'Settings saved!');
 }
@@ -1155,7 +1084,6 @@ document.addEventListener('click', e => {
   if (e.target === $('alertBG')) $('alertBG').classList.remove('show');
 });
 
-// Timeframe buttons
 document.querySelectorAll('.tf-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('on'));
@@ -1182,14 +1110,14 @@ function initCharts() {
   const cm = $('cMain');
   if (cm) CH.main = new Chart(cm.getContext('2d'), {
     type: 'line',
-    data: { labels: [], datasets: [{ data: [], borderColor: '#448aff', borderWidth: 1.5, backgroundColor: 'rgba(68,138,255,.05)', fill: true, tension: .3, pointRadius: 0 }]},
+    data: { labels: [], datasets: [{ data: [], borderColor: '#448aff', borderWidth: 1.5, backgroundColor: 'rgba(68,138,255,.05)', fill: true, tension: .3, pointRadius: 0 }] },
     options: opts(undefined, undefined)
   });
   
   const cr = $('cRSI');
   if (cr) CH.rsi = new Chart(cr.getContext('2d'), {
     type: 'line',
-    data: { labels: [], datasets: [{ data: [], borderColor: '#ffab00', borderWidth: 1.5, tension: .3, pointRadius: 0, fill: false }]},
+    data: { labels: [], datasets: [{ data: [], borderColor: '#ffab00', borderWidth: 1.5, tension: .3, pointRadius: 0, fill: false }] },
     options: opts(0, 100)
   });
   
@@ -1243,27 +1171,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   document.addEventListener('click', () => initAudio(), { once: true });
   
-  // Load BTC candle history
+  // Check trade server
+  checkTradeServer();
+  setInterval(checkTradeServer, 60000);
+  
   await loadCandles();
-  
-  // Connect Binance WS
   wsConnect();
-  
-  // Try Predict.fun API
-  await pfUpdate();
-  
-  // Start auto-update
+  await pfLoadMarket();
   startPfAutoUpdate();
   
-  // Start analysis
   setTimeout(runAnalysis, 1500);
   analysisTimer = setInterval(runAnalysis, S.interval);
   
-  // Periodic candle reload
   setInterval(loadCandles, 60000);
 });
 
-// Cleanup on unload
+// Cleanup
 window.addEventListener('beforeunload', () => {
   if (analysisTimer) clearInterval(analysisTimer);
   if (pfUpdateTimer) clearInterval(pfUpdateTimer);
