@@ -1,320 +1,465 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binance 14:00 UTC Stats (30 Days)</title>
-    <style>
-        :root {
-            --bg-color: #1e222d;
-            --card-bg: #2a2e39;
-            --text-color: #d1d4dc;
-            --accent: #fcd535;
-            --up: #0ecb81;
-            --down: #f6465d;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #474d57;
-            padding-bottom: 15px;
-        }
-        h1 { margin: 0; font-size: 24px; color: var(--accent); }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        input {
-            background: var(--card-bg);
-            border: 1px solid #474d57;
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-        button {
-            background: var(--accent);
-            color: #1e222d;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover { opacity: 0.9; }
-        button:disabled { background: #474d57; cursor: not-allowed; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Binance 14:00 UTC Stats (30 Days)</title>
+  <style>
+    :root {
+      --bg-color: #1e222d;
+      --card-bg: #2a2e39;
+      --text-color: #d1d4dc;
+      --accent: #fcd535;
+      --up: #0ecb81;
+      --down: #f6465d;
+      --muted: #848e9c;
+      --border: #474d57;
+    }
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .stat-label { font-size: 12px; color: #848e9c; margin-bottom: 5px; }
-        .stat-value { font-size: 18px; font-weight: bold; }
-        .stat-sub { font-size: 12px; margin-top: 5px; }
+    * { box-sizing: border-box; }
 
-        /* Table */
-        .table-container {
-            overflow-x: auto;
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        th, td {
-            text-align: right;
-            padding: 12px;
-            border-bottom: 1px solid #474d57;
-        }
-        th { text-align: left; color: #848e9c; }
-        tr:last-child td { border-bottom: none; }
-        
-        .loader {
-            display: none;
-            color: var(--accent);
-            margin: 20px 0;
-        }
-        .error { color: var(--down); margin-top: 10px; }
-    </style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--accent);
+    }
+
+    #status {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    input {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      min-width: 220px;
+      outline: none;
+    }
+
+    button {
+      background: var(--accent);
+      color: #1e222d;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover { opacity: 0.92; }
+    button:disabled {
+      background: var(--border);
+      cursor: not-allowed;
+      color: #c7ccd6;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      margin-top: 5px;
+      color: var(--muted);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: right;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      text-align: left;
+      color: var(--muted);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .loader {
+      display: none;
+      color: var(--accent);
+      margin: 20px 0;
+    }
+
+    .error {
+      color: var(--down);
+      margin-top: 10px;
+      white-space: pre-line;
+    }
+
+    .section-title {
+      margin: 0 0 12px 0;
+    }
+  </style>
 </head>
 <body>
-
-<div class="container">
+  <div class="container">
     <header>
-        <h1>📊 Binance 14:00 UTC (30 дней)</h1>
-        <div id="status">Готов к работе</div>
+      <h1>📊 Binance 14:00 UTC (30 дней)</h1>
+      <div id="status">Готов к работе</div>
     </header>
 
     <div class="controls">
-        <input type="text" id="symbolInput" value="BTCUSDT" placeholder="Пара (BTCUSDT)">
-        <button onclick="startAnalysis()" id="btnFetch">Загрузить данные</button>
+      <input type="text" id="symbolInput" value="BTCUSDT" placeholder="Пара (BTCUSDT)" />
+      <button id="btnFetch">Загрузить данные</button>
     </div>
 
-    <div id="loader" class="loader">Загрузка данных... Это может занять несколько секунд (30 дней × 4 свечи/час).</div>
+    <div class="hint">
+      Показываются 15-минутные свечи, которые открылись ровно в <b>14:00 UTC</b>, за последние 30 дней.
+    </div>
+
+    <div id="loader" class="loader">Загрузка данных...</div>
     <div id="errorMsg" class="error"></div>
 
     <div id="results" style="display:none;">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Найдено свечей (14:00)</div>
-                <div class="stat-value" id="statCount">0</div>
-                <div class="stat-sub">из ~2880 всего</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Средняя цена (Close)</div>
-                <div class="stat-value" id="statAvgClose">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Максимум (High)</div>
-                <div class="stat-value" id="statMaxHigh">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Минимум (Low)</div>
-                <div class="stat-value" id="statMinLow">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Общий объем (Base)</div>
-                <div class="stat-value" id="statVol">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Изменение за период</div>
-                <div class="stat-value" id="statChange">-</div>
-            </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Найдено свечей (14:00 UTC)</div>
+          <div class="stat-value" id="statCount">0</div>
+          <div class="stat-sub">обычно около 30</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Средняя цена (Close)</div>
+          <div class="stat-value" id="statAvgClose">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Максимум (High)</div>
+          <div class="stat-value" id="statMaxHigh">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Минимум (Low)</div>
+          <div class="stat-value" id="statMinLow">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Общий объем (Base)</div>
+          <div class="stat-value" id="statVol">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Изменение за период</div>
+          <div class="stat-value" id="statChange">-</div>
+        </div>
+      </div>
 
-        <h3>Детализация (последние 50 записей)</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Дата (UTC)</th>
-                        <th>Open</th>
-                        <th>High</th>
-                        <th>Low</th>
-                        <th>Close</th>
-                        <th>Volume</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Rows will be inserted here -->
-                </tbody>
-            </table>
-        </div>
+      <h3 class="section-title">Детализация</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Дата (UTC)</th>
+              <th>Open</th>
+              <th>High</th>
+              <th>Low</th>
+              <th>Close</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-    // Используем прокси для обхода CORS в браузере
-    const PROXY_URL = 'https://api.allorigins.win/get?url=';
+  <script>
     const BINANCE_API = 'https://api.binance.com/api/v3/klines';
-    
+    const INTERVAL = '15m';
+    const LIMIT = 1000;
     const MS_IN_DAY = 86400000;
-    const TARGET_HOUR = 14; // 14:00 UTC
+    const TARGET_HOUR = 14;
+    const TARGET_MINUTE = 0;
+
+    const els = {
+      symbolInput: document.getElementById('symbolInput'),
+      btnFetch: document.getElementById('btnFetch'),
+      loader: document.getElementById('loader'),
+      results: document.getElementById('results'),
+      errorMsg: document.getElementById('errorMsg'),
+      status: document.getElementById('status'),
+      statCount: document.getElementById('statCount'),
+      statAvgClose: document.getElementById('statAvgClose'),
+      statMaxHigh: document.getElementById('statMaxHigh'),
+      statMinLow: document.getElementById('statMinLow'),
+      statVol: document.getElementById('statVol'),
+      statChange: document.getElementById('statChange'),
+      tableBody: document.getElementById('tableBody')
+    };
+
+    els.btnFetch.addEventListener('click', startAnalysis);
+    els.symbolInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') startAnalysis();
+    });
 
     async function startAnalysis() {
-        const symbol = document.getElementById('symbolInput').value.toUpperCase();
-        const btn = document.getElementById('btnFetch');
-        const loader = document.getElementById('loader');
-        const results = document.getElementById('results');
-        const errorMsg = document.getElementById('errorMsg');
-        const status = document.getElementById('status');
+      const symbol = els.symbolInput.value.trim().toUpperCase();
 
-        // Сброс интерфейса
-        errorMsg.textContent = '';
-        results.style.display = 'none';
-        btn.disabled = true;
-        loader.style.display = 'block';
-        status.textContent = 'Загрузка...';
+      resetUI();
+      setLoading(true);
 
-        try {
-            const allCandles = await fetchAllData(symbol);
-            const filteredCandles = filterByTime(allCandles);
-            
-            if (filteredCandles.length === 0) {
-                throw new Error("Нет данных за указанный период или неверная пара.");
-            }
+      try {
+        validateSymbol(symbol);
 
-            renderStats(filteredCandles);
-            renderTable(filteredCandles);
-            
-            results.style.display = 'block';
-            status.textContent = `Готово: ${filteredCandles.length} свечей`;
-        } catch (err) {
-            console.error(err);
-            errorMsg.textContent = "Ошибка: " + err.message;
-            status.textContent = 'Ошибка';
-        } finally {
-            btn.disabled = false;
-            loader.style.display = 'none';
+        const allCandles = await fetchAllData(symbol);
+        const filteredCandles = filterByTime(allCandles);
+
+        if (!filteredCandles.length) {
+          throw new Error('Нет свечей на 14:00 UTC за последние 30 дней или неверная торговая пара.');
         }
+
+        renderStats(filteredCandles);
+        renderTable(filteredCandles);
+
+        els.results.style.display = 'block';
+        els.status.textContent = `Готово: ${filteredCandles.length} свечей`;
+      } catch (err) {
+        console.error(err);
+        els.errorMsg.textContent = 'Ошибка: ' + err.message;
+        els.status.textContent = 'Ошибка';
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Функция для получения всех данных с пагинацией
+    function resetUI() {
+      els.errorMsg.textContent = '';
+      els.results.style.display = 'none';
+      els.tableBody.innerHTML = '';
+      els.status.textContent = 'Подготовка...';
+    }
+
+    function setLoading(isLoading) {
+      els.btnFetch.disabled = isLoading;
+      els.loader.style.display = isLoading ? 'block' : 'none';
+      if (isLoading) els.status.textContent = 'Загрузка...';
+    }
+
+    function validateSymbol(symbol) {
+      if (!symbol) throw new Error('Введите торговую пару, например BTCUSDT.');
+      if (!/^[A-Z0-9]{5,20}$/.test(symbol)) {
+        throw new Error('Некорректный формат пары. Пример: BTCUSDT');
+      }
+    }
+
     async function fetchAllData(symbol) {
-        const endTime = Date.now();
-        const startTime = endTime - (30 * MS_IN_DAY);
-        let currentStart = startTime;
-        let allData = [];
+      const endTime = Date.now();
+      const startTime = endTime - (30 * MS_IN_DAY);
+      let currentStart = startTime;
+      let allData = [];
 
-        // Максимум 1000 свечей за запрос
-        const LIMIT = 1000;
+      while (currentStart < endTime) {
+        const url = new URL(BINANCE_API);
+        url.searchParams.set('symbol', symbol);
+        url.searchParams.set('interval', INTERVAL);
+        url.searchParams.set('startTime', currentStart);
+        url.searchParams.set('endTime', endTime);
+        url.searchParams.set('limit', LIMIT);
 
-        while (currentStart < endTime) {
-            const url = `${BINANCE_API}?symbol=${symbol}&interval=15m&startTime=${currentStart}&endTime=${endTime}&limit=${LIMIT}`;
-            
-            // Запрос через прокси
-            const response = await fetch(PROXY_URL + encodeURIComponent(url));
-            const data = await response.json();
-            
-            if (!data.contents) throw new Error("Ошибка сети или прокси");
-            
-            const klines = JSON.parse(data.contents);
-            
-            if (klines.length === 0) break;
+        const response = await fetch(url.toString());
 
-            allData = allData.concat(klines);
-            
-            // Сдвигаем время старта на время закрытия последней свечи + 1мс
-            const lastCandleCloseTime = klines[klines.length - 1][6];
-            currentStart = lastCandleCloseTime + 1;
+        if (!response.ok) {
+          let msg = `HTTP ${response.status}`;
+          try {
+            const err = await response.json();
+            if (err && err.msg) msg += `: ${err.msg}`;
+          } catch (_) {}
+          throw new Error(msg);
         }
 
-        return allData;
+        const klines = await response.json();
+
+        if (!Array.isArray(klines)) {
+          throw new Error('Некорректный ответ от Binance API.');
+        }
+
+        if (klines.length === 0) break;
+
+        allData = allData.concat(klines);
+
+        const lastOpenTime = klines[klines.length - 1][0];
+        const nextStart = lastOpenTime + intervalToMs(INTERVAL);
+
+        if (nextStart <= currentStart) break;
+        currentStart = nextStart;
+
+        if (klines.length < LIMIT) break;
+      }
+
+      return dedupeCandles(allData);
     }
 
-    // Фильтрация по времени (14:00 UTC)
+    function dedupeCandles(klines) {
+      const map = new Map();
+      for (const candle of klines) {
+        map.set(candle[0], candle);
+      }
+      return [...map.values()].sort((a, b) => a[0] - b[0]);
+    }
+
     function filterByTime(klines) {
-        return klines.filter(candle => {
-            const openTime = new Date(candle[0]); // [0] - Open Time
-            return openTime.getUTCHours() === TARGET_HOUR && openTime.getUTCMinutes() === 0;
-        });
+      return klines.filter(candle => {
+        const openTime = new Date(candle[0]);
+        return (
+          openTime.getUTCHours() === TARGET_HOUR &&
+          openTime.getUTCMinutes() === TARGET_MINUTE
+        );
+      });
     }
 
-    // Расчет статистики
     function renderStats(candles) {
-        const closes = candles.map(c => parseFloat(c[4])); // [4] - Close
-        const highs = candles.map(c => parseFloat(c[2]));  // [2] - High
-        const lows = candles.map(c => parseFloat(c[3]));   // [3] - Low
-        const volumes = candles.map(c => parseFloat(c[5])); // [5] - Volume
+      const closes = candles.map(c => parseFloat(c[4]));
+      const highs = candles.map(c => parseFloat(c[2]));
+      const lows = candles.map(c => parseFloat(c[3]));
+      const volumes = candles.map(c => parseFloat(c[5]));
 
-        const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
-        const maxHigh = Math.max(...highs);
-        const minLow = Math.min(...lows);
-        const totalVol = volumes.reduce((a, b) => a + b, 0);
-        
-        const firstOpen = parseFloat(candles[0][1]);
-        const lastClose = parseFloat(candles[candles.length - 1][4]);
-        const changePct = ((lastClose - firstOpen) / firstOpen) * 100;
+      const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
+      const maxHigh = Math.max(...highs);
+      const minLow = Math.min(...lows);
+      const totalVol = volumes.reduce((a, b) => a + b, 0);
 
-        document.getElementById('statCount').textContent = candles.length;
-        document.getElementById('statAvgClose').textContent = formatMoney(avgClose);
-        document.getElementById('statMaxHigh').textContent = formatMoney(maxHigh);
-        document.getElementById('statMinLow').textContent = formatMoney(minLow);
-        document.getElementById('statVol').textContent = totalVol.toFixed(2);
-        
-        const changeEl = document.getElementById('statChange');
-        changeEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
-        changeEl.style.color = changePct >= 0 ? 'var(--up)' : 'var(--down)';
+      const firstOpen = parseFloat(candles[0][1]);
+      const lastClose = parseFloat(candles[candles.length - 1][4]);
+      const changePct = ((lastClose - firstOpen) / firstOpen) * 100;
+
+      els.statCount.textContent = candles.length;
+      els.statAvgClose.textContent = formatMoney(avgClose);
+      els.statMaxHigh.textContent = formatMoney(maxHigh);
+      els.statMinLow.textContent = formatMoney(minLow);
+      els.statVol.textContent = formatVolume(totalVol);
+
+      els.statChange.textContent = `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+      els.statChange.style.color = changePct >= 0 ? 'var(--up)' : 'var(--down)';
     }
 
-    // Отрисовка таблицы (последние 50)
     function renderTable(candles) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        
-        // Берем последние 50 и реверсируем для таблицы (свежие сверху)
-        const displayData = candles.slice(-50).reverse();
+      els.tableBody.innerHTML = '';
 
-        displayData.forEach(c => {
-            const date = new Date(c[0]).toISOString().replace('T', ' ').substring(0, 16);
-            const row = `
-                <tr>
-                    <td>${date}</td>
-                    <td>${formatMoney(c[1])}</td>
-                    <td style="color:var(--up)">${formatMoney(c[2])}</td>
-                    <td style="color:var(--down)">${formatMoney(c[3])}</td>
-                    <td>${formatMoney(c[4])}</td>
-                    <td>${parseFloat(c[5]).toFixed(2)}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
+      const displayData = [...candles].reverse();
+
+      for (const c of displayData) {
+        const date = new Date(c[0]).toISOString().replace('T', ' ').substring(0, 16);
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+          <td style="text-align:left">${date}</td>
+          <td>${formatMoney(c[1])}</td>
+          <td style="color:var(--up)">${formatMoney(c[2])}</td>
+          <td style="color:var(--down)">${formatMoney(c[3])}</td>
+          <td>${formatMoney(c[4])}</td>
+          <td>${formatVolume(c[5])}</td>
+        `;
+
+        els.tableBody.appendChild(row);
+      }
+    }
+
+    function intervalToMs(interval) {
+      const map = {
+        '1m': 60000,
+        '3m': 180000,
+        '5m': 300000,
+        '15m': 900000,
+        '30m': 1800000,
+        '1h': 3600000,
+        '2h': 7200000,
+        '4h': 14400000,
+        '1d': 86400000
+      };
+      return map[interval] || 900000;
     }
 
     function formatMoney(num) {
-        return new Intl.NumberFormat('en-US', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-        }).format(num);
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(Number(num));
     }
-</script>
 
+    function formatVolume(num) {
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+      }).format(Number(num));
+    }
+
+    startAnalysis();
+  </script>
 </body>
 </html>
