@@ -95,6 +95,18 @@
       opacity: 1;
     }
 
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .btn-outline:hover {
+      background: rgba(252, 213, 53, 0.1);
+    }
+
     .hint {
       color: var(--muted);
       font-size: 13px;
@@ -124,7 +136,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 16px; 
     }
 
     .stat-card {
@@ -146,22 +158,22 @@
     .stat-value { font-size: 17px; font-weight: 700; }
     .stat-sub   { font-size: 11px; margin-top: 5px; color: var(--muted); }
 
-    /* ── Section title ── */
     .section-title {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      color: var(--muted);
-      margin: 0 0 10px 0;
+      color: var(--text-color);
+      margin: 0;
     }
 
-    /* ── Table ── */
+    /* ── Table (inside modal) ── */
     .table-container {
       overflow-x: auto;
+      overflow-y: auto;
       background: var(--card-bg);
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      border-radius: 0 0 10px 10px;
+      max-height: calc(85vh - 60px); 
     }
 
     table {
@@ -184,19 +196,20 @@
       text-align: right;
     }
 
-    th:first-child,
-    td:first-child { text-align: left; }
-
-    th:last-child,
-    td:last-child  { text-align: center; }
+    th:first-child, td:first-child { text-align: left; }
+    th:last-child, td:last-child  { text-align: center; }
 
     th {
+      position: sticky;
+      top: 0;
       color: var(--muted);
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      background: rgba(255,255,255,0.02);
+      background: var(--bg-color); /* Непрозрачный фон для липкого заголовка */
+      z-index: 10;
+      box-shadow: 0 1px 0 var(--border);
     }
 
     tr:last-child td { border-bottom: none; }
@@ -230,7 +243,6 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 20px 24px;
-      margin-top: 16px;
     }
 
     .summary-header {
@@ -245,7 +257,7 @@
     .summary-title {
       font-size: 13px;
       font-weight: 600;
-      color: var(--muted);
+      color: var(--text-color);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -287,6 +299,60 @@
       font-size: 11px;
       color: var(--muted);
     }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-bg.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card-bg);
+      border-radius: 10px 10px 0 0;
+    }
+
+    .btn-close {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .btn-close:hover {
+      color: var(--text-color);
+    }
   </style>
 </head>
 <body>
@@ -310,6 +376,7 @@
 
     <div id="results" style="display:none;">
 
+      <!-- РАСШИРЕННЫЙ КОМПАКТНЫЙ БЛОК -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Свечей (14:00 UTC)</div>
@@ -338,8 +405,38 @@
         </div>
       </div>
 
-      <h3 class="section-title">Детализация по дням</h3>
+      <!-- Итог: Bull vs Bear -->
+      <div class="summary">
+        <div class="summary-header">
+          <span class="summary-title">🏆 Итог за 30 дней — Bull vs Bear</span>
+          <span class="summary-verdict" id="summaryVerdict">—</span>
+        </div>
+        <div class="summary-counts">
+          <span class="count-bull" id="countBull">🟢 Bull: 0</span>
+          <span class="count-bear" id="countBear">🔴 Bear: 0</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill" id="progressFill" style="width:50%"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="pctBull">0%</span>
+          <span id="pctBear">0%</span>
+        </div>
+      </div>
 
+      <!-- Кнопка вызова детальной таблицы -->
+      <button id="btnOpenModal" class="btn-outline">📄 Посмотреть историю по дням</button>
+
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ТАБЛИЦЫ -->
+  <div class="modal-bg" id="tableModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="section-title">🕒 Детализация по дням (14:00 UTC)</h3>
+        <button class="btn-close" id="btnCloseModal">✖ Закрыть</button>
+      </div>
       <div class="table-container">
         <table>
           <colgroup>
@@ -365,26 +462,6 @@
           <tbody id="tableBody"></tbody>
         </table>
       </div>
-
-      <!-- Итог: Bull vs Bear -->
-      <div class="summary">
-        <div class="summary-header">
-          <span class="summary-title">🏆 Итог за 30 дней — Bull vs Bear</span>
-          <span class="summary-verdict" id="summaryVerdict">—</span>
-        </div>
-        <div class="summary-counts">
-          <span class="count-bull" id="countBull">🟢 Bull: 0</span>
-          <span class="count-bear" id="countBear">🔴 Bear: 0</span>
-        </div>
-        <div class="progress-wrap">
-          <div class="progress-fill" id="progressFill" style="width:50%"></div>
-        </div>
-        <div class="progress-labels">
-          <span id="pctBull">0%</span>
-          <span id="pctBear">0%</span>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -418,10 +495,21 @@
       progressFill : $('progressFill'),
       pctBull      : $('pctBull'),
       pctBear      : $('pctBear'),
+      // Элементы модалки
+      tableModal   : $('tableModal'),
+      btnOpenModal : $('btnOpenModal'),
+      btnCloseModal: $('btnCloseModal')
     };
 
     els.btnFetch.addEventListener('click', startAnalysis);
     els.symbolInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAnalysis(); });
+
+    // Управление модалкой
+    els.btnOpenModal.addEventListener('click', () => els.tableModal.classList.add('open'));
+    els.btnCloseModal.addEventListener('click', () => els.tableModal.classList.remove('open'));
+    els.tableModal.addEventListener('click', e => {
+      if (e.target === els.tableModal) els.tableModal.classList.remove('open');
+    });
 
     async function startAnalysis() {
       const symbol = els.symbolInput.value.trim().toUpperCase();
@@ -456,6 +544,7 @@
       els.results.style.display = 'none';
       els.tableBody.innerHTML   = '';
       els.status.textContent    = 'Подготовка...';
+      els.tableModal.classList.remove('open');
     }
 
     function setLoading(on) {
