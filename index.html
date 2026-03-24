@@ -73,9 +73,7 @@
       transition: border-color 0.2s;
     }
 
-    input:focus {
-      border-color: var(--accent);
-    }
+    input:focus { border-color: var(--accent); }
 
     button {
       background: var(--accent);
@@ -90,7 +88,6 @@
     }
 
     button:hover { opacity: 0.88; }
-
     button:disabled {
       background: var(--border);
       cursor: not-allowed;
@@ -146,16 +143,8 @@
       margin-bottom: 8px;
     }
 
-    .stat-value {
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .stat-sub {
-      font-size: 11px;
-      margin-top: 5px;
-      color: var(--muted);
-    }
+    .stat-value { font-size: 17px; font-weight: 700; }
+    .stat-sub   { font-size: 11px; margin-top: 5px; color: var(--muted); }
 
     /* ── Section title ── */
     .section-title {
@@ -179,12 +168,12 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
-      table-layout: fixed;   /* ключевое — фиксирует колонки */
+      table-layout: fixed;
     }
 
-    /* Ширины колонок */
-    col.col-date   { width: 160px; }
-    col.col-num    { width: calc((100% - 160px) / 5); }
+    col.col-date  { width: 150px; }
+    col.col-num   { width: calc((100% - 150px - 90px) / 5); }
+    col.col-trend { width: 90px; }
 
     th, td {
       padding: 11px 14px;
@@ -192,15 +181,14 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      /* по умолчанию выравниваем вправо */
       text-align: right;
     }
 
-    /* Первая колонка — влево */
     th:first-child,
-    td:first-child {
-      text-align: left;
-    }
+    td:first-child { text-align: left; }
+
+    th:last-child,
+    td:last-child  { text-align: center; }
 
     th {
       color: var(--muted);
@@ -211,12 +199,93 @@
       background: rgba(255,255,255,0.02);
     }
 
-    tr:last-child td {
-      border-bottom: none;
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover   { background: rgba(255,255,255,0.03); }
+
+    /* ── Trend badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
     }
 
-    tbody tr:hover {
-      background: rgba(255, 255, 255, 0.03);
+    .badge-bull {
+      background: rgba(14, 203, 129, 0.15);
+      color: var(--up);
+      border: 1px solid rgba(14, 203, 129, 0.3);
+    }
+
+    .badge-bear {
+      background: rgba(246, 70, 93, 0.15);
+      color: var(--down);
+      border: 1px solid rgba(246, 70, 93, 0.3);
+    }
+
+    /* ── Summary block ── */
+    .summary {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-top: 16px;
+    }
+
+    .summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .summary-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-verdict {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .summary-counts {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .count-bull { color: var(--up);   font-weight: 600; }
+    .count-bear { color: var(--down); font-weight: 600; }
+
+    /* Progress bar */
+    .progress-wrap {
+      height: 8px;
+      background: rgba(246, 70, 93, 0.3);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--up);
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -240,6 +309,7 @@
     <div id="errorMsg" class="error"></div>
 
     <div id="results" style="display:none;">
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Свечей (14:00 UTC)</div>
@@ -269,6 +339,7 @@
       </div>
 
       <h3 class="section-title">Детализация по дням</h3>
+
       <div class="table-container">
         <table>
           <colgroup>
@@ -278,6 +349,7 @@
             <col class="col-num" />
             <col class="col-num" />
             <col class="col-num" />
+            <col class="col-trend" />
           </colgroup>
           <thead>
             <tr>
@@ -287,38 +359,65 @@
               <th>Low</th>
               <th>Close</th>
               <th>Volume</th>
+              <th>Тренд</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
+
+      <!-- Итог: Bull vs Bear -->
+      <div class="summary">
+        <div class="summary-header">
+          <span class="summary-title">🏆 Итог за 30 дней — Bull vs Bear</span>
+          <span class="summary-verdict" id="summaryVerdict">—</span>
+        </div>
+        <div class="summary-counts">
+          <span class="count-bull" id="countBull">🟢 Bull: 0</span>
+          <span class="count-bear" id="countBear">🔴 Bear: 0</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-fill" id="progressFill" style="width:50%"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="pctBull">0%</span>
+          <span id="pctBear">0%</span>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <script>
-    const BINANCE_API  = 'https://api.binance.com/api/v3/klines';
-    const INTERVAL     = '15m';
-    const LIMIT        = 1000;
-    const MS_IN_DAY    = 86_400_000;
-    const TARGET_HOUR  = 14;
-    const TARGET_MIN   = 0;
+    const BINANCE_API = 'https://api.binance.com/api/v3/klines';
+    const INTERVAL    = '15m';
+    const LIMIT       = 1000;
+    const MS_IN_DAY   = 86_400_000;
+    const TARGET_HOUR = 14;
+    const TARGET_MIN  = 0;
 
     const $ = id => document.getElementById(id);
 
     const els = {
-      symbolInput : $('symbolInput'),
-      btnFetch    : $('btnFetch'),
-      loader      : $('loader'),
-      results     : $('results'),
-      errorMsg    : $('errorMsg'),
-      status      : $('status'),
-      statCount   : $('statCount'),
-      statAvgClose: $('statAvgClose'),
-      statMaxHigh : $('statMaxHigh'),
-      statMinLow  : $('statMinLow'),
-      statVol     : $('statVol'),
-      statChange  : $('statChange'),
-      tableBody   : $('tableBody'),
+      symbolInput  : $('symbolInput'),
+      btnFetch     : $('btnFetch'),
+      loader       : $('loader'),
+      results      : $('results'),
+      errorMsg     : $('errorMsg'),
+      status       : $('status'),
+      statCount    : $('statCount'),
+      statAvgClose : $('statAvgClose'),
+      statMaxHigh  : $('statMaxHigh'),
+      statMinLow   : $('statMinLow'),
+      statVol      : $('statVol'),
+      statChange   : $('statChange'),
+      tableBody    : $('tableBody'),
+      summaryVerdict: $('summaryVerdict'),
+      countBull    : $('countBull'),
+      countBear    : $('countBear'),
+      progressFill : $('progressFill'),
+      pctBull      : $('pctBull'),
+      pctBear      : $('pctBear'),
     };
 
     els.btnFetch.addEventListener('click', startAnalysis);
@@ -331,14 +430,16 @@
 
       try {
         validateSymbol(symbol);
-        const all      = await fetchAllData(symbol);
-        const candles  = filterByTime(all);
+        const all     = await fetchAllData(symbol);
+        const candles = filterByTime(all);
 
         if (!candles.length)
           throw new Error('Нет свечей на 14:00 UTC за последние 30 дней.\nПроверьте правильность торговой пары.');
 
         renderStats(candles);
         renderTable(candles);
+        renderSummary(candles);
+
         els.results.style.display = 'block';
         els.status.textContent = `Готово · ${candles.length} свечей`;
       } catch (err) {
@@ -358,8 +459,8 @@
     }
 
     function setLoading(on) {
-      els.btnFetch.disabled      = on;
-      els.loader.style.display   = on ? 'block' : 'none';
+      els.btnFetch.disabled    = on;
+      els.loader.style.display = on ? 'block' : 'none';
       if (on) els.status.textContent = 'Загрузка...';
     }
 
@@ -415,17 +516,18 @@
       });
     }
 
+    function isBullish(c) { return +c[4] >= +c[1]; }
+
     function renderStats(candles) {
-      const n      = candles.length;
       const closes = candles.map(c => +c[4]);
       const highs  = candles.map(c => +c[2]);
       const lows   = candles.map(c => +c[3]);
       const vols   = candles.map(c => +c[5]);
 
-      const avgClose  = closes.reduce((a, b) => a + b, 0) / n;
+      const avgClose  = closes.reduce((a, b) => a + b, 0) / candles.length;
       const changePct = ((+candles.at(-1)[4] - +candles[0][1]) / +candles[0][1]) * 100;
 
-      els.statCount.textContent    = n;
+      els.statCount.textContent    = candles.length;
       els.statAvgClose.textContent = fmt(avgClose);
       els.statMaxHigh.textContent  = fmt(Math.max(...highs));
       els.statMinLow.textContent   = fmt(Math.min(...lows));
@@ -438,23 +540,48 @@
       const frag = document.createDocumentFragment();
 
       for (const c of [...candles].reverse()) {
-        const date  = new Date(c[0]).toISOString().replace('T', ' ').slice(0, 16);
-        const open  = +c[1], high = +c[2], low = +c[3], close = +c[4];
-        const isBull = close >= open;
+        const date = new Date(c[0]).toISOString().replace('T', ' ').slice(0, 16);
+        const bull = isBullish(c);
+        const tr   = document.createElement('tr');
 
-        const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${date}</td>
-          <td>${fmt(open)}</td>
-          <td style="color:var(--up)">${fmt(high)}</td>
-          <td style="color:var(--down)">${fmt(low)}</td>
-          <td style="color:${isBull ? 'var(--up)' : 'var(--down)'};font-weight:600">${fmt(close)}</td>
+          <td>${fmt(+c[1])}</td>
+          <td style="color:var(--up)">${fmt(+c[2])}</td>
+          <td style="color:var(--down)">${fmt(+c[3])}</td>
+          <td style="color:${bull ? 'var(--up)' : 'var(--down)'};font-weight:600">${fmt(+c[4])}</td>
           <td>${fmtVol(+c[5])}</td>
+          <td><span class="badge ${bull ? 'badge-bull' : 'badge-bear'}">${bull ? '▲ Bull' : '▼ Bear'}</span></td>
         `;
         frag.appendChild(tr);
       }
 
       els.tableBody.appendChild(frag);
+    }
+
+    function renderSummary(candles) {
+      const total = candles.length;
+      const bulls = candles.filter(isBullish).length;
+      const bears = total - bulls;
+      const bullPct = Math.round((bulls / total) * 100);
+      const bearPct = 100 - bullPct;
+
+      els.countBull.textContent   = `🟢 Bull: ${bulls}`;
+      els.countBear.textContent   = `🔴 Bear: ${bears}`;
+      els.progressFill.style.width = `${bullPct}%`;
+      els.pctBull.textContent     = `🟢 ${bullPct}%`;
+      els.pctBear.textContent     = `${bearPct}% 🔴`;
+
+      if (bulls > bears) {
+        els.summaryVerdict.textContent = `🟢 Бычьи преобладают (+${bulls - bears})`;
+        els.summaryVerdict.style.color = 'var(--up)';
+      } else if (bears > bulls) {
+        els.summaryVerdict.textContent = `🔴 Медвежьи преобладают (+${bears - bulls})`;
+        els.summaryVerdict.style.color = 'var(--down)';
+      } else {
+        els.summaryVerdict.textContent = '⚖️ Поровну';
+        els.summaryVerdict.style.color = 'var(--accent)';
+      }
     }
 
     function intervalToMs(i) {
