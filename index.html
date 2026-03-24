@@ -27,7 +27,7 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
@@ -36,27 +36,27 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 15px;
+      padding-bottom: 16px;
       flex-wrap: wrap;
     }
 
     h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 22px;
       color: var(--accent);
     }
 
     #status {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .controls {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
@@ -64,165 +64,221 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: white;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-radius: 6px;
+      font-size: 14px;
       text-transform: uppercase;
-      min-width: 220px;
+      min-width: 200px;
       outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
     }
 
     button {
       background: var(--accent);
       color: #1e222d;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 22px;
       border-radius: 6px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 700;
+      font-size: 14px;
+      transition: opacity 0.2s;
     }
 
-    button:hover { opacity: 0.92; }
+    button:hover { opacity: 0.88; }
+
     button:disabled {
       background: var(--border);
       cursor: not-allowed;
-      color: #c7ccd6;
+      color: var(--muted);
+      opacity: 1;
     }
 
     .hint {
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      line-height: 1.5;
     }
 
+    .hint b { color: var(--text-color); }
+
+    .loader {
+      display: none;
+      color: var(--accent);
+      font-size: 14px;
+      margin: 16px 0;
+    }
+
+    .error {
+      color: var(--down);
+      font-size: 14px;
+      margin-top: 10px;
+      white-space: pre-line;
+      min-height: 20px;
+    }
+
+    /* ── Stats grid ── */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
     }
 
     .stat-card {
       background: var(--card-bg);
-      padding: 15px;
+      padding: 16px 14px;
       border-radius: 10px;
       text-align: center;
-      border: 1px solid rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
     }
 
     .stat-label {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--muted);
-      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
     }
 
     .stat-value {
-      font-size: 18px;
-      font-weight: bold;
+      font-size: 17px;
+      font-weight: 700;
     }
 
     .stat-sub {
-      font-size: 12px;
+      font-size: 11px;
       margin-top: 5px;
       color: var(--muted);
     }
 
+    /* ── Section title ── */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      margin: 0 0 10px 0;
+    }
+
+    /* ── Table ── */
     .table-container {
       overflow-x: auto;
       background: var(--card-bg);
       border-radius: 10px;
-      padding: 10px;
+      border: 1px solid var(--border);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 13px;
+      table-layout: fixed;   /* ключевое — фиксирует колонки */
     }
 
+    /* Ширины колонок */
+    col.col-date   { width: 160px; }
+    col.col-num    { width: calc((100% - 160px) / 5); }
+
     th, td {
-      text-align: right;
-      padding: 12px;
+      padding: 11px 14px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* по умолчанию выравниваем вправо */
+      text-align: right;
+    }
+
+    /* Первая колонка — влево */
+    th:first-child,
+    td:first-child {
+      text-align: left;
     }
 
     th {
-      text-align: left;
       color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.02);
     }
 
     tr:last-child td {
       border-bottom: none;
     }
 
-    .loader {
-      display: none;
-      color: var(--accent);
-      margin: 20px 0;
-    }
-
-    .error {
-      color: var(--down);
-      margin-top: 10px;
-      white-space: pre-line;
-    }
-
-    .section-title {
-      margin: 0 0 12px 0;
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📊 Binance 14:00 UTC (30 дней)</h1>
+      <h1>📊 Binance 14:00 UTC — 30 дней</h1>
       <div id="status">Готов к работе</div>
     </header>
 
     <div class="controls">
       <input type="text" id="symbolInput" value="BTCUSDT" placeholder="Пара (BTCUSDT)" />
-      <button id="btnFetch">Загрузить данные</button>
+      <button id="btnFetch">Загрузить</button>
     </div>
 
     <div class="hint">
-      Показываются 15-минутные свечи, которые открылись ровно в <b>14:00 UTC</b>, за последние 30 дней.
+      15-минутные свечи, открытые ровно в <b>14:00 UTC</b>, за последние 30 дней.
     </div>
 
-    <div id="loader" class="loader">Загрузка данных...</div>
+    <div id="loader" class="loader">⏳ Загрузка данных...</div>
     <div id="errorMsg" class="error"></div>
 
     <div id="results" style="display:none;">
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-label">Найдено свечей (14:00 UTC)</div>
+          <div class="stat-label">Свечей (14:00 UTC)</div>
           <div class="stat-value" id="statCount">0</div>
-          <div class="stat-sub">обычно около 30</div>
+          <div class="stat-sub">обычно ≈ 30</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Средняя цена (Close)</div>
-          <div class="stat-value" id="statAvgClose">-</div>
+          <div class="stat-label">Средняя цена Close</div>
+          <div class="stat-value" id="statAvgClose">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Максимум (High)</div>
-          <div class="stat-value" id="statMaxHigh">-</div>
+          <div class="stat-label">Максимум High</div>
+          <div class="stat-value" id="statMaxHigh">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Минимум (Low)</div>
-          <div class="stat-value" id="statMinLow">-</div>
+          <div class="stat-label">Минимум Low</div>
+          <div class="stat-value" id="statMinLow">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Общий объем (Base)</div>
-          <div class="stat-value" id="statVol">-</div>
+          <div class="stat-label">Объём (Base)</div>
+          <div class="stat-value" id="statVol">—</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Изменение за период</div>
-          <div class="stat-value" id="statChange">-</div>
+          <div class="stat-value" id="statChange">—</div>
         </div>
       </div>
 
-      <h3 class="section-title">Детализация</h3>
+      <h3 class="section-title">Детализация по дням</h3>
       <div class="table-container">
         <table>
+          <colgroup>
+            <col class="col-date" />
+            <col class="col-num" />
+            <col class="col-num" />
+            <col class="col-num" />
+            <col class="col-num" />
+            <col class="col-num" />
+          </colgroup>
           <thead>
             <tr>
               <th>Дата (UTC)</th>
@@ -240,55 +296,51 @@
   </div>
 
   <script>
-    const BINANCE_API = 'https://api.binance.com/api/v3/klines';
-    const INTERVAL = '15m';
-    const LIMIT = 1000;
-    const MS_IN_DAY = 86400000;
-    const TARGET_HOUR = 14;
-    const TARGET_MINUTE = 0;
+    const BINANCE_API  = 'https://api.binance.com/api/v3/klines';
+    const INTERVAL     = '15m';
+    const LIMIT        = 1000;
+    const MS_IN_DAY    = 86_400_000;
+    const TARGET_HOUR  = 14;
+    const TARGET_MIN   = 0;
+
+    const $ = id => document.getElementById(id);
 
     const els = {
-      symbolInput: document.getElementById('symbolInput'),
-      btnFetch: document.getElementById('btnFetch'),
-      loader: document.getElementById('loader'),
-      results: document.getElementById('results'),
-      errorMsg: document.getElementById('errorMsg'),
-      status: document.getElementById('status'),
-      statCount: document.getElementById('statCount'),
-      statAvgClose: document.getElementById('statAvgClose'),
-      statMaxHigh: document.getElementById('statMaxHigh'),
-      statMinLow: document.getElementById('statMinLow'),
-      statVol: document.getElementById('statVol'),
-      statChange: document.getElementById('statChange'),
-      tableBody: document.getElementById('tableBody')
+      symbolInput : $('symbolInput'),
+      btnFetch    : $('btnFetch'),
+      loader      : $('loader'),
+      results     : $('results'),
+      errorMsg    : $('errorMsg'),
+      status      : $('status'),
+      statCount   : $('statCount'),
+      statAvgClose: $('statAvgClose'),
+      statMaxHigh : $('statMaxHigh'),
+      statMinLow  : $('statMinLow'),
+      statVol     : $('statVol'),
+      statChange  : $('statChange'),
+      tableBody   : $('tableBody'),
     };
 
     els.btnFetch.addEventListener('click', startAnalysis);
-    els.symbolInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') startAnalysis();
-    });
+    els.symbolInput.addEventListener('keydown', e => { if (e.key === 'Enter') startAnalysis(); });
 
     async function startAnalysis() {
       const symbol = els.symbolInput.value.trim().toUpperCase();
-
       resetUI();
       setLoading(true);
 
       try {
         validateSymbol(symbol);
+        const all      = await fetchAllData(symbol);
+        const candles  = filterByTime(all);
 
-        const allCandles = await fetchAllData(symbol);
-        const filteredCandles = filterByTime(allCandles);
+        if (!candles.length)
+          throw new Error('Нет свечей на 14:00 UTC за последние 30 дней.\nПроверьте правильность торговой пары.');
 
-        if (!filteredCandles.length) {
-          throw new Error('Нет свечей на 14:00 UTC за последние 30 дней или неверная торговая пара.');
-        }
-
-        renderStats(filteredCandles);
-        renderTable(filteredCandles);
-
+        renderStats(candles);
+        renderTable(candles);
         els.results.style.display = 'block';
-        els.status.textContent = `Готово: ${filteredCandles.length} свечей`;
+        els.status.textContent = `Готово · ${candles.length} свечей`;
       } catch (err) {
         console.error(err);
         els.errorMsg.textContent = 'Ошибка: ' + err.message;
@@ -299,165 +351,121 @@
     }
 
     function resetUI() {
-      els.errorMsg.textContent = '';
+      els.errorMsg.textContent  = '';
       els.results.style.display = 'none';
-      els.tableBody.innerHTML = '';
-      els.status.textContent = 'Подготовка...';
+      els.tableBody.innerHTML   = '';
+      els.status.textContent    = 'Подготовка...';
     }
 
-    function setLoading(isLoading) {
-      els.btnFetch.disabled = isLoading;
-      els.loader.style.display = isLoading ? 'block' : 'none';
-      if (isLoading) els.status.textContent = 'Загрузка...';
+    function setLoading(on) {
+      els.btnFetch.disabled      = on;
+      els.loader.style.display   = on ? 'block' : 'none';
+      if (on) els.status.textContent = 'Загрузка...';
     }
 
-    function validateSymbol(symbol) {
-      if (!symbol) throw new Error('Введите торговую пару, например BTCUSDT.');
-      if (!/^[A-Z0-9]{5,20}$/.test(symbol)) {
-        throw new Error('Некорректный формат пары. Пример: BTCUSDT');
-      }
+    function validateSymbol(s) {
+      if (!s) throw new Error('Введите торговую пару, например BTCUSDT.');
+      if (!/^[A-Z0-9]{5,20}$/.test(s)) throw new Error('Некорректный формат пары. Пример: BTCUSDT');
     }
 
     async function fetchAllData(symbol) {
-      const endTime = Date.now();
-      const startTime = endTime - (30 * MS_IN_DAY);
-      let currentStart = startTime;
-      let allData = [];
+      const endTime   = Date.now();
+      const startTime = endTime - 30 * MS_IN_DAY;
+      let cur  = startTime;
+      let data = [];
 
-      while (currentStart < endTime) {
+      while (cur < endTime) {
         const url = new URL(BINANCE_API);
-        url.searchParams.set('symbol', symbol);
-        url.searchParams.set('interval', INTERVAL);
-        url.searchParams.set('startTime', currentStart);
-        url.searchParams.set('endTime', endTime);
-        url.searchParams.set('limit', LIMIT);
+        url.searchParams.set('symbol',    symbol);
+        url.searchParams.set('interval',  INTERVAL);
+        url.searchParams.set('startTime', cur);
+        url.searchParams.set('endTime',   endTime);
+        url.searchParams.set('limit',     LIMIT);
 
-        const response = await fetch(url.toString());
+        const res = await fetch(url.toString());
 
-        if (!response.ok) {
-          let msg = `HTTP ${response.status}`;
-          try {
-            const err = await response.json();
-            if (err && err.msg) msg += `: ${err.msg}`;
-          } catch (_) {}
+        if (!res.ok) {
+          let msg = `HTTP ${res.status}`;
+          try { const e = await res.json(); if (e?.msg) msg += `: ${e.msg}`; } catch (_) {}
           throw new Error(msg);
         }
 
-        const klines = await response.json();
+        const klines = await res.json();
+        if (!Array.isArray(klines)) throw new Error('Некорректный ответ от Binance API.');
+        if (!klines.length) break;
 
-        if (!Array.isArray(klines)) {
-          throw new Error('Некорректный ответ от Binance API.');
-        }
-
-        if (klines.length === 0) break;
-
-        allData = allData.concat(klines);
-
-        const lastOpenTime = klines[klines.length - 1][0];
-        const nextStart = lastOpenTime + intervalToMs(INTERVAL);
-
-        if (nextStart <= currentStart) break;
-        currentStart = nextStart;
-
-        if (klines.length < LIMIT) break;
+        data = data.concat(klines);
+        const next = klines.at(-1)[0] + intervalToMs(INTERVAL);
+        if (next <= cur || klines.length < LIMIT) break;
+        cur = next;
       }
 
-      return dedupeCandles(allData);
+      return dedupeCandles(data);
     }
 
     function dedupeCandles(klines) {
-      const map = new Map();
-      for (const candle of klines) {
-        map.set(candle[0], candle);
-      }
+      const map = new Map(klines.map(c => [c[0], c]));
       return [...map.values()].sort((a, b) => a[0] - b[0]);
     }
 
     function filterByTime(klines) {
-      return klines.filter(candle => {
-        const openTime = new Date(candle[0]);
-        return (
-          openTime.getUTCHours() === TARGET_HOUR &&
-          openTime.getUTCMinutes() === TARGET_MINUTE
-        );
+      return klines.filter(c => {
+        const d = new Date(c[0]);
+        return d.getUTCHours() === TARGET_HOUR && d.getUTCMinutes() === TARGET_MIN;
       });
     }
 
     function renderStats(candles) {
-      const closes = candles.map(c => parseFloat(c[4]));
-      const highs = candles.map(c => parseFloat(c[2]));
-      const lows = candles.map(c => parseFloat(c[3]));
-      const volumes = candles.map(c => parseFloat(c[5]));
+      const n      = candles.length;
+      const closes = candles.map(c => +c[4]);
+      const highs  = candles.map(c => +c[2]);
+      const lows   = candles.map(c => +c[3]);
+      const vols   = candles.map(c => +c[5]);
 
-      const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
-      const maxHigh = Math.max(...highs);
-      const minLow = Math.min(...lows);
-      const totalVol = volumes.reduce((a, b) => a + b, 0);
+      const avgClose  = closes.reduce((a, b) => a + b, 0) / n;
+      const changePct = ((+candles.at(-1)[4] - +candles[0][1]) / +candles[0][1]) * 100;
 
-      const firstOpen = parseFloat(candles[0][1]);
-      const lastClose = parseFloat(candles[candles.length - 1][4]);
-      const changePct = ((lastClose - firstOpen) / firstOpen) * 100;
-
-      els.statCount.textContent = candles.length;
-      els.statAvgClose.textContent = formatMoney(avgClose);
-      els.statMaxHigh.textContent = formatMoney(maxHigh);
-      els.statMinLow.textContent = formatMoney(minLow);
-      els.statVol.textContent = formatVolume(totalVol);
-
-      els.statChange.textContent = `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`;
-      els.statChange.style.color = changePct >= 0 ? 'var(--up)' : 'var(--down)';
+      els.statCount.textContent    = n;
+      els.statAvgClose.textContent = fmt(avgClose);
+      els.statMaxHigh.textContent  = fmt(Math.max(...highs));
+      els.statMinLow.textContent   = fmt(Math.min(...lows));
+      els.statVol.textContent      = fmtVol(vols.reduce((a, b) => a + b, 0));
+      els.statChange.textContent   = `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+      els.statChange.style.color   = changePct >= 0 ? 'var(--up)' : 'var(--down)';
     }
 
     function renderTable(candles) {
-      els.tableBody.innerHTML = '';
+      const frag = document.createDocumentFragment();
 
-      const displayData = [...candles].reverse();
+      for (const c of [...candles].reverse()) {
+        const date  = new Date(c[0]).toISOString().replace('T', ' ').slice(0, 16);
+        const open  = +c[1], high = +c[2], low = +c[3], close = +c[4];
+        const isBull = close >= open;
 
-      for (const c of displayData) {
-        const date = new Date(c[0]).toISOString().replace('T', ' ').substring(0, 16);
-        const row = document.createElement('tr');
-
-        row.innerHTML = `
-          <td style="text-align:left">${date}</td>
-          <td>${formatMoney(c[1])}</td>
-          <td style="color:var(--up)">${formatMoney(c[2])}</td>
-          <td style="color:var(--down)">${formatMoney(c[3])}</td>
-          <td>${formatMoney(c[4])}</td>
-          <td>${formatVolume(c[5])}</td>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${fmt(open)}</td>
+          <td style="color:var(--up)">${fmt(high)}</td>
+          <td style="color:var(--down)">${fmt(low)}</td>
+          <td style="color:${isBull ? 'var(--up)' : 'var(--down)'};font-weight:600">${fmt(close)}</td>
+          <td>${fmtVol(+c[5])}</td>
         `;
-
-        els.tableBody.appendChild(row);
+        frag.appendChild(tr);
       }
+
+      els.tableBody.appendChild(frag);
     }
 
-    function intervalToMs(interval) {
-      const map = {
-        '1m': 60000,
-        '3m': 180000,
-        '5m': 300000,
-        '15m': 900000,
-        '30m': 1800000,
-        '1h': 3600000,
-        '2h': 7200000,
-        '4h': 14400000,
-        '1d': 86400000
-      };
-      return map[interval] || 900000;
+    function intervalToMs(i) {
+      return { '1m':60e3,'3m':18e4,'5m':3e5,'15m':9e5,'30m':18e5,'1h':36e5,'4h':144e5,'1d':864e5 }[i] ?? 9e5;
     }
 
-    function formatMoney(num) {
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(Number(num));
-    }
+    const numFmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const volFmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
-    function formatVolume(num) {
-      return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4
-      }).format(Number(num));
-    }
+    const fmt    = v => numFmt.format(Number(v));
+    const fmtVol = v => volFmt.format(Number(v));
 
     startAnalysis();
   </script>
