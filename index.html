@@ -1,46 +1,320 @@
-import requests
-import pandas as pd
-from datetime import datetime, timedelta
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance 14:00 UTC Stats (30 Days)</title>
+    <style>
+        :root {
+            --bg-color: #1e222d;
+            --card-bg: #2a2e39;
+            --text-color: #d1d4dc;
+            --accent: #fcd535;
+            --up: #0ecb81;
+            --down: #f6465d;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #474d57;
+            padding-bottom: 15px;
+        }
+        h1 { margin: 0; font-size: 24px; color: var(--accent); }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            background: var(--card-bg);
+            border: 1px solid #474d57;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        button {
+            background: var(--accent);
+            color: #1e222d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { background: #474d57; cursor: not-allowed; }
 
-def get_14utc_candles_stats(symbol, days=30, interval='15m'):
-    base_url = "https://api.binance.com/api/v3/klines"
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label { font-size: 12px; color: #848e9c; margin-bottom: 5px; }
+        .stat-value { font-size: 18px; font-weight: bold; }
+        .stat-sub { font-size: 12px; margin-top: 5px; }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            text-align: right;
+            padding: 12px;
+            border-bottom: 1px solid #474d57;
+        }
+        th { text-align: left; color: #848e9c; }
+        tr:last-child td { border-bottom: none; }
+        
+        .loader {
+            display: none;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+        .error { color: var(--down); margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📊 Binance 14:00 UTC (30 дней)</h1>
+        <div id="status">Готов к работе</div>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="symbolInput" value="BTCUSDT" placeholder="Пара (BTCUSDT)">
+        <button onclick="startAnalysis()" id="btnFetch">Загрузить данные</button>
+    </div>
+
+    <div id="loader" class="loader">Загрузка данных... Это может занять несколько секунд (30 дней × 4 свечи/час).</div>
+    <div id="errorMsg" class="error"></div>
+
+    <div id="results" style="display:none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Найдено свечей (14:00)</div>
+                <div class="stat-value" id="statCount">0</div>
+                <div class="stat-sub">из ~2880 всего</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Средняя цена (Close)</div>
+                <div class="stat-value" id="statAvgClose">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Максимум (High)</div>
+                <div class="stat-value" id="statMaxHigh">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Минимум (Low)</div>
+                <div class="stat-value" id="statMinLow">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Общий объем (Base)</div>
+                <div class="stat-value" id="statVol">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Изменение за период</div>
+                <div class="stat-value" id="statChange">-</div>
+            </div>
+        </div>
+
+        <h3>Детализация (последние 50 записей)</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата (UTC)</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Close</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Используем прокси для обхода CORS в браузере
+    const PROXY_URL = 'https://api.allorigins.win/get?url=';
+    const BINANCE_API = 'https://api.binance.com/api/v3/klines';
     
-    end_time = int(datetime.utcnow().timestamp() * 1000)
-    start_time = int((datetime.utcnow() - timedelta(days=days)).timestamp() * 1000)
-    
-    params = {
-        'symbol': symbol,
-        'interval': interval,
-        'startTime': start_time,
-        'endTime': end_time,
-        'limit': 1000
-    }
-    
-    response = requests.get(base_url, params=params)
-    data = response.json()
-    
-    # Конвертация в DataFrame
-    df = pd.DataFrame(data, columns=[
-        'open_time', 'open', 'high', 'low', 'close', 'volume',
-        'close_time', 'quote_volume', 'trades', 'taker_buy_base', 
-        'taker_buy_quote', 'ignore'
-    ])
-    
-    df['open_time'] = pd.to_datetime(df['open_time'], unit='ms', utc=True)
-    numeric_cols = ['open', 'high', 'low', 'close', 'volume']
-    df[numeric_cols] = df[numeric_cols].astype(float)
-    
-    # Фильтр 14:00 UTC
-    df_14 = df[df['open_time'].dt.hour == 14]
-    
-    return {
-        'count': len(df_14),
-        'avg_close': df_14['close'].mean(),
-        'max_high': df_14['high'].max(),
-        'min_low': df_14['low'].min(),
-        'total_volume': df_14['volume'].sum()
+    const MS_IN_DAY = 86400000;
+    const TARGET_HOUR = 14; // 14:00 UTC
+
+    async function startAnalysis() {
+        const symbol = document.getElementById('symbolInput').value.toUpperCase();
+        const btn = document.getElementById('btnFetch');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const errorMsg = document.getElementById('errorMsg');
+        const status = document.getElementById('status');
+
+        // Сброс интерфейса
+        errorMsg.textContent = '';
+        results.style.display = 'none';
+        btn.disabled = true;
+        loader.style.display = 'block';
+        status.textContent = 'Загрузка...';
+
+        try {
+            const allCandles = await fetchAllData(symbol);
+            const filteredCandles = filterByTime(allCandles);
+            
+            if (filteredCandles.length === 0) {
+                throw new Error("Нет данных за указанный период или неверная пара.");
+            }
+
+            renderStats(filteredCandles);
+            renderTable(filteredCandles);
+            
+            results.style.display = 'block';
+            status.textContent = `Готово: ${filteredCandles.length} свечей`;
+        } catch (err) {
+            console.error(err);
+            errorMsg.textContent = "Ошибка: " + err.message;
+            status.textContent = 'Ошибка';
+        } finally {
+            btn.disabled = false;
+            loader.style.display = 'none';
+        }
     }
 
-# Использование
-result = get_14utc_candles_stats('BTCUSDT')
-print(result)
+    // Функция для получения всех данных с пагинацией
+    async function fetchAllData(symbol) {
+        const endTime = Date.now();
+        const startTime = endTime - (30 * MS_IN_DAY);
+        let currentStart = startTime;
+        let allData = [];
+
+        // Максимум 1000 свечей за запрос
+        const LIMIT = 1000;
+
+        while (currentStart < endTime) {
+            const url = `${BINANCE_API}?symbol=${symbol}&interval=15m&startTime=${currentStart}&endTime=${endTime}&limit=${LIMIT}`;
+            
+            // Запрос через прокси
+            const response = await fetch(PROXY_URL + encodeURIComponent(url));
+            const data = await response.json();
+            
+            if (!data.contents) throw new Error("Ошибка сети или прокси");
+            
+            const klines = JSON.parse(data.contents);
+            
+            if (klines.length === 0) break;
+
+            allData = allData.concat(klines);
+            
+            // Сдвигаем время старта на время закрытия последней свечи + 1мс
+            const lastCandleCloseTime = klines[klines.length - 1][6];
+            currentStart = lastCandleCloseTime + 1;
+        }
+
+        return allData;
+    }
+
+    // Фильтрация по времени (14:00 UTC)
+    function filterByTime(klines) {
+        return klines.filter(candle => {
+            const openTime = new Date(candle[0]); // [0] - Open Time
+            return openTime.getUTCHours() === TARGET_HOUR && openTime.getUTCMinutes() === 0;
+        });
+    }
+
+    // Расчет статистики
+    function renderStats(candles) {
+        const closes = candles.map(c => parseFloat(c[4])); // [4] - Close
+        const highs = candles.map(c => parseFloat(c[2]));  // [2] - High
+        const lows = candles.map(c => parseFloat(c[3]));   // [3] - Low
+        const volumes = candles.map(c => parseFloat(c[5])); // [5] - Volume
+
+        const avgClose = closes.reduce((a, b) => a + b, 0) / closes.length;
+        const maxHigh = Math.max(...highs);
+        const minLow = Math.min(...lows);
+        const totalVol = volumes.reduce((a, b) => a + b, 0);
+        
+        const firstOpen = parseFloat(candles[0][1]);
+        const lastClose = parseFloat(candles[candles.length - 1][4]);
+        const changePct = ((lastClose - firstOpen) / firstOpen) * 100;
+
+        document.getElementById('statCount').textContent = candles.length;
+        document.getElementById('statAvgClose').textContent = formatMoney(avgClose);
+        document.getElementById('statMaxHigh').textContent = formatMoney(maxHigh);
+        document.getElementById('statMinLow').textContent = formatMoney(minLow);
+        document.getElementById('statVol').textContent = totalVol.toFixed(2);
+        
+        const changeEl = document.getElementById('statChange');
+        changeEl.textContent = `${changePct > 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+        changeEl.style.color = changePct >= 0 ? 'var(--up)' : 'var(--down)';
+    }
+
+    // Отрисовка таблицы (последние 50)
+    function renderTable(candles) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        // Берем последние 50 и реверсируем для таблицы (свежие сверху)
+        const displayData = candles.slice(-50).reverse();
+
+        displayData.forEach(c => {
+            const date = new Date(c[0]).toISOString().replace('T', ' ').substring(0, 16);
+            const row = `
+                <tr>
+                    <td>${date}</td>
+                    <td>${formatMoney(c[1])}</td>
+                    <td style="color:var(--up)">${formatMoney(c[2])}</td>
+                    <td style="color:var(--down)">${formatMoney(c[3])}</td>
+                    <td>${formatMoney(c[4])}</td>
+                    <td>${parseFloat(c[5]).toFixed(2)}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function formatMoney(num) {
+        return new Intl.NumberFormat('en-US', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        }).format(num);
+    }
+</script>
+
+</body>
+</html>
